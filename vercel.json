@@ -20,8 +20,7 @@
         "PYTHONPATH": ".",
         "FLASK_ENV": "production",
         "FLASK_APP": "app.py",
-        "POSTGRES_PRISMA_URL": "postgres://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres?sslmode=require",
-        "POSTGRES_URL_NON_POOLING": "postgres://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres?sslmode=require"
+        "DATABASE_URL": "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres?sslmode=require&pool_size=20&max_overflow=0"
     },
     "functions": {
         "app.py": {
@@ -29,10 +28,5 @@
             "maxDuration": 10
         }
     },
-    "regions": ["hkg1"],
-    "github": {
-        "enabled": true,
-        "silent": false,
-        "autoAlias": true
-    }
+    "regions": ["hkg1"]
 } 

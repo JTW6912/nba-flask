@@ -25,20 +25,24 @@ DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres:060912Wjt@db.kbb
 # 确保使用正确的连接字符串格式
 if '?' in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.split('?')[0]
-DATABASE_URL += '?sslmode=require'
+DATABASE_URL += '?sslmode=require&pool_size=20&max_overflow=0'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
-    'pool_size': 1,
+    'pool_size': 20,
     'max_overflow': 0,
-    'pool_recycle': 300,
+    'pool_recycle': 1800,
+    'pool_timeout': 30,
     'connect_args': {
         'connect_timeout': 10,
         'application_name': 'nba-flask',
         'sslmode': 'require',
-        'options': '-c statement_timeout=60000'
+        'keepalives': 1,
+        'keepalives_idle': 30,
+        'keepalives_interval': 10,
+        'keepalives_count': 5
     }
 }
 
@@ -48,13 +52,17 @@ db = SQLAlchemy(app)
 # 数据库连接管理
 @app.before_request
 def before_request():
-    g.db_conn = None
+    try:
+        db.session.execute('SELECT 1')
+    except Exception:
+        db.session.rollback()
+        raise
 
 @app.teardown_request
 def teardown_request(exception=None):
-    db_conn = getattr(g, 'db_conn', None)
-    if db_conn is not None:
-        db_conn.close()
+    if exception:
+        db.session.rollback()
+    db.session.remove()
 
 # 创建数据库表
 with app.app_context():
