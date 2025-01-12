@@ -26,5 +26,9 @@
             "maxDuration": 10
         }
     },
-    "regions": ["hkg1"]
+    "regions": ["hkg1"],
+    "github": {
+        "enabled": true,
+        "silent": false
+    }
 } 
