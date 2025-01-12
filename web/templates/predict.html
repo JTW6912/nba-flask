@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Predict - NBA Prediction System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Game Prediction</h2>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Prediction Feature</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading">Coming Soon!</h4>
+                        <p>The real-time prediction feature is currently under development. We are working on improving our prediction models and data processing capabilities.</p>
+                        <hr>
+                        <p class="mb-0">In the meantime, you can explore our model comparison and analysis in the Models section.</p>
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('models') }}" class="btn btn-primary">View Model Analysis</a>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary ms-2">Return to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

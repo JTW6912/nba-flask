@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - NBA Prediction System{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">System Dashboard</h2>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Model Performance Overview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <img src="{{ url_for('static', filename='img/model_comparison.png') }}" 
+                             class="img-fluid" alt="Model Performance Overview">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">System Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <h6 class="alert-heading">System Status</h6>
+                        <p class="mb-0">All models are trained and ready for analysis. Explore the model comparisons to understand their performance characteristics.</p>
+                    </div>
+                    <div class="alert alert-success mb-0">
+                        <h6 class="alert-heading">Data Update</h6>
+                        <p class="mb-0">Models have been trained with the latest NBA game data.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">System Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Training Data Size
+                            <span class="badge bg-primary rounded-pill">5,164</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Best Model Accuracy
+                            <span class="badge bg-success rounded-pill">82.2%</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Models Compared
+                            <span class="badge bg-info rounded-pill">3</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Best Performing Model</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center">
+                        <h3 class="text-primary">Logistic Regression</h3>
+                        <p class="text-muted">Based on overall performance metrics</p>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Accuracy:</span>
+                                <span class="text-success">82.2%</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Precision:</span>
+                                <span class="text-success">83.8%</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Recall:</span>
+                                <span class="text-success">86.0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('models') }}" class="btn btn-primary">View Model Details</a>
+                        <a href="{{ url_for('predict') }}" class="btn btn-outline-primary">Check Prediction Status</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Model Comparison Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Model</th>
+                                    <th>True Negatives</th>
+                                    <th>False Positives</th>
+                                    <th>False Negatives</th>
+                                    <th>True Positives</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Logistic Regression</td>
+                                    <td>1,661</td>
+                                    <td>500</td>
+                                    <td>422</td>
+                                    <td>2,581</td>
+                                </tr>
+                                <tr>
+                                    <td>Random Forest</td>
+                                    <td>1,542</td>
+                                    <td>619</td>
+                                    <td>390</td>
+                                    <td>2,613</td>
+                                </tr>
+                                <tr>
+                                    <td>ELO Rating</td>
+                                    <td>1,363</td>
+                                    <td>791</td>
+                                    <td>1,227</td>
+                                    <td>1,783</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
