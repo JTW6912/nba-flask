@@ -21,25 +21,46 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-secret-key')
 
 # Supabase PostgreSQL 连接配置
 DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres")
+
+# 确保使用 SSL 连接
+if 'sslmode=require' not in DATABASE_URL:
+    DATABASE_URL += '?sslmode=require'
+
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_size': 1,  # 最小连接数
-    'max_overflow': 0,  # 最大连接数
-    'pool_timeout': 30,  # 连接超时时间
-    'pool_recycle': 1800,  # 连接回收时间
-    'pool_pre_ping': True,  # 自动检测断开的连接
+    'pool_size': 1,
+    'max_overflow': 0,
+    'pool_timeout': 30,
+    'pool_recycle': 1800,
+    'pool_pre_ping': True,
     'connect_args': {
-        'connect_timeout': 10,  # 连接超时时间
-        'keepalives': 1,  # 保持连接
-        'keepalives_idle': 30,  # 空闲连接保持时间
-        'keepalives_interval': 10,  # 连接保持间隔
-        'keepalives_count': 5  # 连接保持次数
+        'connect_timeout': 10,
+        'application_name': 'nba-flask',  # 添加应用名称
+        'keepalives': 1,
+        'keepalives_idle': 30,
+        'keepalives_interval': 10,
+        'keepalives_count': 5,
+        'sslmode': 'require'  # 强制使用 SSL
     }
 }
 
+# 创建数据库连接
+def get_db():
+    if not hasattr(g, 'db'):
+        g.db = db.create_engine(DATABASE_URL, **app.config['SQLALCHEMY_ENGINE_OPTIONS'])
+    return g.db
+
+@app.teardown_appcontext
+def teardown_db(exception=None):
+    db = g.pop('db', None)
+    if db is not None:
+        db.dispose()
+
 try:
     db = SQLAlchemy(app)
+    with app.app_context():
+        db.create_all()
     logger.info("Database initialized successfully")
 except Exception as e:
     logger.error(f"Database initialization failed: {str(e)}")

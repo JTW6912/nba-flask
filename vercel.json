@@ -3,7 +3,10 @@
     "builds": [
         {
             "src": "app.py",
-            "use": "@vercel/python"
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "15mb"
+            }
         }
     ],
     "routes": [
@@ -22,5 +25,6 @@
             "memory": 1024,
             "maxDuration": 10
         }
-    }
+    },
+    "regions": ["hkg1"]
 } 
