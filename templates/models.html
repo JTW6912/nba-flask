@@ -62,124 +62,52 @@
             </div>
         </div>
 
-        <!-- Detailed Analysis -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Confusion Matrix -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-bold mb-4">Confusion Matrix</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead>
-                            <tr class="bg-gray-50">
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Model</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">TN</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">FP</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">FN</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">TP</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200">
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">Logistic Regression</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">1,661</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">500</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">422</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">2,581</td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">Random Forest</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">1,542</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">619</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">390</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">2,613</td>
-                            </tr>
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">ELO Rating</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">1,363</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">791</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">1,227</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">1,783</td>
-                            </tr>
-                        </tbody>
-                    </table>
+        <!-- Confusion Matrices -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Confusion Matrix Analysis</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">Logistic Regression Matrix</h3>
+                    <img src="{{ url_for('static', filename='img/logistic_regression/confusion_matrix.png') }}" 
+                         alt="Logistic Regression Confusion Matrix" 
+                         class="w-full rounded-lg shadow-sm">
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">Random Forest Matrix</h3>
+                    <img src="{{ url_for('static', filename='img/random_forest/confusion_matrix.png') }}" 
+                         alt="Random Forest Confusion Matrix" 
+                         class="w-full rounded-lg shadow-sm">
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">ELO Rating Matrix</h3>
+                    <img src="{{ url_for('static', filename='img/elo_rating/confusion_matrix.png') }}" 
+                         alt="ELO Rating Confusion Matrix" 
+                         class="w-full rounded-lg shadow-sm">
                 </div>
             </div>
+        </div>
 
-            <!-- Performance Metrics -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-bold mb-4">Performance Metrics</h2>
-                <div class="space-y-6">
-                    <div>
-                        <h3 class="text-lg font-semibold mb-3">Precision</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span>Logistic Regression</span>
-                                    <span>83.8%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-green-500 h-2 rounded-full" style="width: 83.8%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span>Random Forest</span>
-                                    <span>80.9%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 80.9%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span>ELO Rating</span>
-                                    <span>69.3%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 69.3%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 class="text-lg font-semibold mb-3">Recall</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span>Logistic Regression</span>
-                                    <span>86.0%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-green-500 h-2 rounded-full" style="width: 86.0%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span>Random Forest</span>
-                                    <span>87.0%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 87.0%"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-sm mb-1">
-                                    <span>ELO Rating</span>
-                                    <span>59.3%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-purple-500 h-2 rounded-full" style="width: 59.3%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Feature Importance -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Feature Importance Analysis</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">Logistic Regression Features</h3>
+                    <img src="{{ url_for('static', filename='img/logistic_regression/feature_importance.png') }}" 
+                         alt="Logistic Regression Features" 
+                         class="w-full rounded-lg shadow-sm">
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">Random Forest Features</h3>
+                    <img src="{{ url_for('static', filename='img/random_forest/feature_importance.png') }}" 
+                         alt="Random Forest Features" 
+                         class="w-full rounded-lg shadow-sm">
                 </div>
             </div>
         </div>
 
         <!-- Model Description -->
-        <div class="mt-8 bg-white rounded-lg shadow-lg p-6">
+        <div class="bg-white rounded-lg shadow-lg p-6">
             <h2 class="text-xl font-bold mb-4">Model Description</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -198,4 +126,12 @@
         </div>
     </div>
 </div>
+
+<!-- Chart.js for Interactive Visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add interactive charts here if needed
+});
+</script>
 {% endblock %} 

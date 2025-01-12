@@ -126,8 +126,30 @@ def register():
 @login_required
 def dashboard():
     try:
+        # 示例数据 - 在实际应用中，这些数据应该从数据库获取
+        recent_predictions = [
+            {
+                'date': '2024-03-15',
+                'teams': 'Lakers vs Warriors',
+                'prediction': 'Lakers Win',
+                'result': 'Correct'
+            },
+            {
+                'date': '2024-03-14',
+                'teams': 'Celtics vs Bucks',
+                'prediction': 'Celtics Win',
+                'result': 'Incorrect'
+            },
+            {
+                'date': '2024-03-13',
+                'teams': 'Heat vs Nets',
+                'prediction': 'Heat Win',
+                'result': 'Correct'
+            }
+        ]
+        
         logger.info(f"User {current_user.username} accessed dashboard")
-        return render_template('dashboard.html')
+        return render_template('dashboard.html', recent_predictions=recent_predictions)
     except Exception as e:
         logger.error(f"Error in dashboard route: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -142,6 +164,64 @@ def logout():
         return redirect(url_for('index'))
     except Exception as e:
         logger.error(f"Error in logout route: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/predict', methods=['GET', 'POST'])
+@login_required
+def predict():
+    try:
+        # 示例数据 - 在实际应用中，这些数据应该从数据库获取
+        recent_predictions = [
+            {
+                'date': '2024-03-15',
+                'teams': 'Lakers vs Warriors',
+                'prediction': 'Lakers Win',
+                'result': 'Correct'
+            },
+            {
+                'date': '2024-03-14',
+                'teams': 'Celtics vs Bucks',
+                'prediction': 'Celtics Win',
+                'result': 'Incorrect'
+            },
+            {
+                'date': '2024-03-13',
+                'teams': 'Heat vs Nets',
+                'prediction': 'Heat Win',
+                'result': 'Correct'
+            }
+        ]
+
+        if request.method == 'POST':
+            home_team = request.form.get('home_team')
+            away_team = request.form.get('away_team')
+            # 这里添加预测逻辑
+            prediction = "Home Team Win"  # 示例预测结果
+            win_probability = 75.5  # 示例概率
+            confidence_score = 80.0  # 示例置信度
+            
+            logger.info(f"Prediction made for {home_team} vs {away_team}")
+            return render_template('predict.html', 
+                                prediction=prediction,
+                                home_team=home_team,
+                                away_team=away_team,
+                                win_probability=win_probability,
+                                confidence_score=confidence_score,
+                                recent_predictions=recent_predictions)
+        
+        return render_template('predict.html', recent_predictions=recent_predictions)
+    except Exception as e:
+        logger.error(f"Error in predict route: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/models')
+@login_required
+def models():
+    try:
+        logger.info(f"User {current_user.username} accessed models page")
+        return render_template('models.html')
+    except Exception as e:
+        logger.error(f"Error in models route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
