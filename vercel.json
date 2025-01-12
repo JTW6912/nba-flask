@@ -19,19 +19,6 @@
     "env": {
         "PYTHONPATH": ".",
         "FLASK_ENV": "production",
-        "FLASK_APP": "app.py",
-        "DATABASE_URL": "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres?sslmode=require"
-    },
-    "functions": {
-        "app.py": {
-            "memory": 1024,
-            "maxDuration": 10
-        }
-    },
-    "regions": ["hkg1"],
-    "build": {
-        "env": {
-            "PIP_TARGET": ".pip"
-        }
+        "FLASK_APP": "app.py"
     }
 } 
