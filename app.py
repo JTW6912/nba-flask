@@ -6,6 +6,9 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 import logging
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField
+from wtforms.validators import DataRequired, Length, EqualTo
 
 # 配置日志
 logging.basicConfig(level=logging.DEBUG)
@@ -20,6 +23,20 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-secret-key')
 DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres")
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_size': 1,  # 最小连接数
+    'max_overflow': 0,  # 最大连接数
+    'pool_timeout': 30,  # 连接超时时间
+    'pool_recycle': 1800,  # 连接回收时间
+    'pool_pre_ping': True,  # 自动检测断开的连接
+    'connect_args': {
+        'connect_timeout': 10,  # 连接超时时间
+        'keepalives': 1,  # 保持连接
+        'keepalives_idle': 30,  # 空闲连接保持时间
+        'keepalives_interval': 10,  # 连接保持间隔
+        'keepalives_count': 5  # 连接保持次数
+    }
+}
 
 try:
     db = SQLAlchemy(app)
@@ -36,9 +53,10 @@ login_manager.login_view = 'login'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    password_hash = db.Column(db.String(128), nullable=False)
+
+    def __repr__(self):
+        return f'<User {self.username}>'
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -90,37 +108,29 @@ def login():
         logger.error(f"Error in login route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+class RegistrationForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=20)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('Confirm Password', validators=[
+        DataRequired(),
+        EqualTo('password', message='Passwords must match')
+    ])
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    try:
-        if request.method == 'POST':
-            username = request.form.get('username')
-            email = request.form.get('email')
-            password = request.form.get('password')
-            
-            if User.query.filter_by(username=username).first():
-                logger.warning(f"Registration attempt with existing username: {username}")
-                flash('Username already exists')
-                return redirect(url_for('register'))
-                
-            if User.query.filter_by(email=email).first():
-                logger.warning(f"Registration attempt with existing email: {email}")
-                flash('Email already registered')
-                return redirect(url_for('register'))
-                
-            user = User(username=username, email=email)
-            user.set_password(password)
-            db.session.add(user)
-            db.session.commit()
-            
-            logger.info(f"New user registered: {username}")
-            flash('Registration successful')
-            return redirect(url_for('login'))
-        return render_template('register.html')
-    except Exception as e:
-        logger.error(f"Error in register route: {str(e)}")
-        db.session.rollback()
-        return jsonify({"error": str(e)}), 500
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        user = User(username=form.username.data)
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        flash('Your account has been created! You can now log in.', 'success')
+        return redirect(url_for('login'))
+    
+    return render_template('register.html', form=form)
 
 @app.route('/dashboard')
 @login_required

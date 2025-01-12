@@ -3,12 +3,7 @@
     "builds": [
         {
             "src": "app.py",
-            "use": "@vercel/python",
-            "config": {
-                "maxLambdaSize": "15mb",
-                "pythonVersion": "3.9",
-                "installCommand": "pip install -r requirements.txt"
-            }
+            "use": "@vercel/python"
         }
     ],
     "routes": [
@@ -19,7 +14,13 @@
     ],
     "env": {
         "PYTHONPATH": ".",
-        "DATABASE_URL": "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres",
-        "SECRET_KEY": "your-secret-key-here"
+        "FLASK_ENV": "production",
+        "FLASK_APP": "app.py"
+    },
+    "functions": {
+        "app.py": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
     }
 } 
