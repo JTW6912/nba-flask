@@ -9,6 +9,10 @@ import logging
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired, Length, EqualTo
+import socket
+
+# Force IPv4
+socket.getaddrinfo('db.kbbpkicqzobcrbhhcrzz.supabase.co', 5432, socket.AF_INET)
 
 # 配置日志
 logging.basicConfig(level=logging.DEBUG)
@@ -25,15 +29,15 @@ DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres:060912Wjt@db.kbb
 # 确保使用正确的连接字符串格式
 if '?' in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.split('?')[0]
-DATABASE_URL += '?sslmode=require&pool_size=20&max_overflow=0'
+DATABASE_URL += '?sslmode=require'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
-    'pool_size': 20,
+    'pool_size': 1,
     'max_overflow': 0,
-    'pool_recycle': 1800,
+    'pool_recycle': 300,
     'pool_timeout': 30,
     'connect_args': {
         'connect_timeout': 10,
@@ -42,21 +46,28 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
         'keepalives': 1,
         'keepalives_idle': 30,
         'keepalives_interval': 10,
-        'keepalives_count': 5
+        'keepalives_count': 5,
+        'options': '-c statement_timeout=60000'
     }
 }
 
 # 初始化数据库
 db = SQLAlchemy(app)
 
+def get_db():
+    try:
+        db.session.execute('SELECT 1')
+        return True
+    except Exception as e:
+        logger.error(f"Database connection error: {str(e)}")
+        db.session.rollback()
+        return False
+
 # 数据库连接管理
 @app.before_request
 def before_request():
-    try:
-        db.session.execute('SELECT 1')
-    except Exception:
-        db.session.rollback()
-        raise
+    if not get_db():
+        return jsonify({"error": "Database connection failed"}), 500
 
 @app.teardown_request
 def teardown_request(exception=None):

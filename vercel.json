@@ -20,7 +20,7 @@
         "PYTHONPATH": ".",
         "FLASK_ENV": "production",
         "FLASK_APP": "app.py",
-        "DATABASE_URL": "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres?sslmode=require&pool_size=20&max_overflow=0"
+        "DATABASE_URL": "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres?sslmode=require"
     },
     "functions": {
         "app.py": {
@@ -28,5 +28,10 @@
             "maxDuration": 10
         }
     },
-    "regions": ["hkg1"]
+    "regions": ["hkg1"],
+    "build": {
+        "env": {
+            "PIP_TARGET": ".pip"
+        }
+    }
 } 
