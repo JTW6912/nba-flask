@@ -18,6 +18,8 @@
         }
     ],
     "env": {
-        "PYTHONPATH": "."
+        "PYTHONPATH": ".",
+        "DATABASE_URL": "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres",
+        "SECRET_KEY": "your-secret-key-here"
     }
 } 

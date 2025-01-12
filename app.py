@@ -5,18 +5,29 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 load_dotenv()  # 加载 .env 文件中的环境变量
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your-secret-key-here'
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-secret-key')
 
 # Supabase PostgreSQL 连接配置
-DATABASE_URL = "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres"
+DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres")
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+try:
+    db = SQLAlchemy(app)
+    logger.info("Database initialized successfully")
+except Exception as e:
+    logger.error(f"Database initialization failed: {str(e)}")
+    raise
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -39,109 +50,106 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Error handlers
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f"500 error: {str(error)}")
+    db.session.rollback()
+    return jsonify({"error": "Internal server error", "details": str(error)}), 500
+
+@app.errorhandler(404)
+def not_found_error(error):
+    logger.error(f"404 error: {str(error)}")
+    return jsonify({"error": "Not found"}), 404
+
 # Routes
 @app.route('/')
 def index():
-    return render_template('index.html')
+    try:
+        logger.info("Accessing index page")
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Error in index route: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = User.query.filter_by(username=username).first()
-        if user and user.check_password(password):
-            login_user(user)
-            return redirect(url_for('dashboard'))
-        flash('Invalid username or password')
-    return render_template('login.html')
+    try:
+        if request.method == 'POST':
+            username = request.form.get('username')
+            password = request.form.get('password')
+            user = User.query.filter_by(username=username).first()
+            if user and user.check_password(password):
+                login_user(user)
+                logger.info(f"User {username} logged in successfully")
+                return redirect(url_for('dashboard'))
+            logger.warning(f"Failed login attempt for username: {username}")
+            flash('Invalid username or password')
+        return render_template('login.html')
+    except Exception as e:
+        logger.error(f"Error in login route: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists')
-            return redirect(url_for('register'))
+    try:
+        if request.method == 'POST':
+            username = request.form.get('username')
+            email = request.form.get('email')
+            password = request.form.get('password')
             
-        if User.query.filter_by(email=email).first():
-            flash('Email already registered')
-            return redirect(url_for('register'))
+            if User.query.filter_by(username=username).first():
+                logger.warning(f"Registration attempt with existing username: {username}")
+                flash('Username already exists')
+                return redirect(url_for('register'))
+                
+            if User.query.filter_by(email=email).first():
+                logger.warning(f"Registration attempt with existing email: {email}")
+                flash('Email already registered')
+                return redirect(url_for('register'))
+                
+            user = User(username=username, email=email)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
             
-        user = User(username=username, email=email)
-        user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        
-        flash('Registration successful')
-        return redirect(url_for('login'))
-    return render_template('register.html')
+            logger.info(f"New user registered: {username}")
+            flash('Registration successful')
+            return redirect(url_for('login'))
+        return render_template('register.html')
+    except Exception as e:
+        logger.error(f"Error in register route: {str(e)}")
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
-
-@app.route('/models')
-@login_required
-def models():
-    # Read model evaluation metrics from model_comparison.txt
-    metrics = {
-        'logistic': {'accuracy': 'N/A', 'precision': 'N/A', 'recall': 'N/A', 'f1': 'N/A'},
-        'rf': {'accuracy': 'N/A', 'precision': 'N/A', 'recall': 'N/A', 'f1': 'N/A'},
-        'elo': {'accuracy': 'N/A', 'precision': 'N/A', 'recall': 'N/A', 'f1': 'N/A'}
-    }
-    
     try:
-        with open(os.path.join(basedir, '../model_comparison/model_comparison.txt'), 'r') as f:
-            lines = f.readlines()
-            for line in lines[3:]:  # Skip header lines
-                if line.strip():  # Skip empty lines
-                    parts = line.strip().split()
-                    if 'Logistic' in line:
-                        metrics['logistic'] = {
-                            'accuracy': f"{float(parts[-4]):.1%}",
-                            'precision': f"{float(parts[-3]):.1%}",
-                            'recall': f"{float(parts[-2]):.1%}",
-                            'f1': f"{float(parts[-1]):.1%}"
-                        }
-                    elif 'Random' in line:
-                        metrics['rf'] = {
-                            'accuracy': f"{float(parts[-4]):.1%}",
-                            'precision': f"{float(parts[-3]):.1%}",
-                            'recall': f"{float(parts[-2]):.1%}",
-                            'f1': f"{float(parts[-1]):.1%}"
-                        }
-                    elif 'ELO' in line:
-                        metrics['elo'] = {
-                            'accuracy': f"{float(parts[-4]):.1%}",
-                            'precision': f"{float(parts[-3]):.1%}",
-                            'recall': f"{float(parts[-2]):.1%}",
-                            'f1': f"{float(parts[-1]):.1%}"
-                        }
+        logger.info(f"User {current_user.username} accessed dashboard")
+        return render_template('dashboard.html')
     except Exception as e:
-        print(f"Error reading model comparison file: {str(e)}")
-    
-    return render_template('models.html',
-                         logistic_metrics=metrics.get('logistic'),
-                         rf_metrics=metrics.get('rf'),
-                         elo_metrics=metrics.get('elo'))
-
-@app.route('/predict')
-@login_required
-def predict():
-    return render_template('predict.html')
+        logger.error(f"Error in dashboard route: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/logout')
 @login_required
 def logout():
-    logout_user()
-    return redirect(url_for('index'))
+    try:
+        username = current_user.username
+        logout_user()
+        logger.info(f"User {username} logged out")
+        return redirect(url_for('index'))
+    except Exception as e:
+        logger.error(f"Error in logout route: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+            logger.info("Database tables created successfully")
+        except Exception as e:
+            logger.error(f"Error creating database tables: {str(e)}")
+            raise
     app.run(debug=True) 
