@@ -7,7 +7,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 import logging
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
+from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo
 import socket
 
@@ -15,39 +15,34 @@ import socket
 socket.getaddrinfo('db.kbbpkicqzobcrbhhcrzz.supabase.co', 5432, socket.AF_INET)
 
 # 配置日志
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 load_dotenv()  # 加载 .env 文件中的环境变量
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-secret-key')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
 
-# Supabase PostgreSQL 连接配置
-DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres")
-
-# 确保使用正确的连接字符串格式
-if '?' in DATABASE_URL:
-    DATABASE_URL = DATABASE_URL.split('?')[0]
-DATABASE_URL += '?sslmode=require'
+# 配置数据库连接
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True,
     'pool_size': 1,
-    'max_overflow': 0,
-    'pool_recycle': 300,
     'pool_timeout': 30,
+    'pool_recycle': 1800,
+    'pool_pre_ping': True,
     'connect_args': {
         'connect_timeout': 10,
         'application_name': 'nba-flask',
-        'sslmode': 'require',
         'keepalives': 1,
         'keepalives_idle': 30,
         'keepalives_interval': 10,
         'keepalives_count': 5,
-        'options': '-c statement_timeout=60000'
+        'sslmode': 'require'
     }
 }
 
