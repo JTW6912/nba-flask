@@ -19,7 +19,9 @@
     "env": {
         "PYTHONPATH": ".",
         "FLASK_ENV": "production",
-        "FLASK_APP": "app.py"
+        "FLASK_APP": "app.py",
+        "POSTGRES_PRISMA_URL": "postgres://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres?sslmode=require",
+        "POSTGRES_URL_NON_POOLING": "postgres://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres?sslmode=require"
     },
     "functions": {
         "app.py": {

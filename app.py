@@ -22,49 +22,48 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'default-secret-key')
 # Supabase PostgreSQL 连接配置
 DATABASE_URL = os.getenv('DATABASE_URL', "postgresql://postgres:060912Wjt@db.kbbpkicqzobcrbhhcrzz.supabase.co:5432/postgres")
 
-# 确保使用 SSL 连接
-if 'sslmode=require' not in DATABASE_URL:
-    DATABASE_URL += '?sslmode=require'
+# 确保使用正确的连接字符串格式
+if '?' in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.split('?')[0]
+DATABASE_URL += '?sslmode=require'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
     'pool_size': 1,
     'max_overflow': 0,
-    'pool_timeout': 30,
-    'pool_recycle': 1800,
-    'pool_pre_ping': True,
+    'pool_recycle': 300,
     'connect_args': {
         'connect_timeout': 10,
-        'application_name': 'nba-flask',  # 添加应用名称
-        'keepalives': 1,
-        'keepalives_idle': 30,
-        'keepalives_interval': 10,
-        'keepalives_count': 5,
-        'sslmode': 'require'  # 强制使用 SSL
+        'application_name': 'nba-flask',
+        'sslmode': 'require',
+        'options': '-c statement_timeout=60000'
     }
 }
 
-# 创建数据库连接
-def get_db():
-    if not hasattr(g, 'db'):
-        g.db = db.create_engine(DATABASE_URL, **app.config['SQLALCHEMY_ENGINE_OPTIONS'])
-    return g.db
+# 初始化数据库
+db = SQLAlchemy(app)
 
-@app.teardown_appcontext
-def teardown_db(exception=None):
-    db = g.pop('db', None)
-    if db is not None:
-        db.dispose()
+# 数据库连接管理
+@app.before_request
+def before_request():
+    g.db_conn = None
 
-try:
-    db = SQLAlchemy(app)
-    with app.app_context():
+@app.teardown_request
+def teardown_request(exception=None):
+    db_conn = getattr(g, 'db_conn', None)
+    if db_conn is not None:
+        db_conn.close()
+
+# 创建数据库表
+with app.app_context():
+    try:
         db.create_all()
-    logger.info("Database initialized successfully")
-except Exception as e:
-    logger.error(f"Database initialization failed: {str(e)}")
-    raise
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {str(e)}")
+        logger.error(f"Database URL: {DATABASE_URL.split('@')[0]}@[HIDDEN]")
 
 login_manager = LoginManager()
 login_manager.init_app(app)
