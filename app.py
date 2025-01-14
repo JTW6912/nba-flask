@@ -3,46 +3,42 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
-from datetime import datetime
 from dotenv import load_dotenv
-import logging
-import sys
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo
 from sqlalchemy import text
 import traceback
-import urllib.parse
+import time
 
-# 配置日志
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stdout
-)
-logger = logging.getLogger(__name__)
-
-load_dotenv()  # 加载 .env 文件中的环境变量
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
 
-# 配置数据库连接
-MYSQL_USER = os.environ.get('MYSQLUSER', 'root')
-MYSQL_PASSWORD = os.environ.get('MYSQLPASSWORD')
-MYSQL_HOST = os.environ.get('MYSQLHOST')
-MYSQL_PORT = os.environ.get('MYSQLPORT', '3306')
-MYSQL_DATABASE = os.environ.get('MYSQL_DATABASE')
-
-if all([MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DATABASE]):
-    # 构建MySQL连接URL
-    DATABASE_URL = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
+# 数据库配置部分
+def get_database_url():
+    config = {
+        'user': os.environ.get('MYSQLUSER', 'root'),
+        'password': os.environ.get('MYSQLPASSWORD'),
+        'host': os.environ.get('MYSQLHOST'),
+        'port': os.environ.get('MYSQLPORT', '3306'),
+        'database': os.environ.get('MYSQL_DATABASE')
+    }
     
-    # 配置 SQLAlchemy
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    # 验证必要的配置
+    missing = [k for k, v in config.items() if not v]
+    if missing:
+        raise ValueError(f"Missing required MySQL environment variables: {', '.join(missing)}")
+    
+    return f"mysql+mysqlconnector://{config['user']}:{config['password']}@{config['host']}:{config['port']}/{config['database']}"
+
+def configure_database(app):
+    # 数据库配置
+    app.config['SQLALCHEMY_DATABASE_URI'] = get_database_url()
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'pool_size': int(os.environ.get('MAX_POOL_SIZE', '1')),
+        'pool_size': int(os.environ.get('MAX_POOL_SIZE', '5')),
         'pool_timeout': 30,
         'pool_recycle': 1800,
         'pool_pre_ping': True,
@@ -51,52 +47,53 @@ if all([MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DATABASE]):
             'use_pure': True
         }
     }
-    logger.info("Database configuration completed")
-else:
-    logger.error("Missing required MySQL environment variables")
-    raise ValueError("Required MySQL environment variables are missing")
+    return SQLAlchemy(app)
 
-# 初始化数据库
-db = SQLAlchemy(app)
+try:
+    # 配置并初始化数据库
+    db = configure_database(app)
+    print("Database configuration completed")
+except Exception as e:
+    print(f"Failed to configure database: {str(e)}")
+    raise
 
 def get_db():
-    try:
-        result = db.session.execute(text('SELECT 1')).fetchone()
-        logger.info(f"Database connection test successful: {result}")
-        return True
-    except Exception as e:
-        logger.error(f"Database connection error: {str(e)}")
-        logger.error(f"Database URL format: {DATABASE_URL.split('@')[0]}@[HIDDEN]")
-        logger.error(f"Engine options: {app.config['SQLALCHEMY_ENGINE_OPTIONS']}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        return False
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            db.session.execute(text('SELECT 1')).fetchone()
+            return True
+        except Exception as e:
+            retry_count += 1
+            print(f"Database connection attempt {retry_count} failed: {str(e)}")
+            if retry_count == max_retries:
+                print("Max retries reached, database connection failed")
+                return False
+            db.session.remove()
+            time.sleep(1)  # 等待1秒后重试
 
-# 数据库连接管理
 @app.before_request
 def before_request():
-    try:
-        if not get_db():
-            return jsonify({"error": "Database connection failed"}), 500
-    except Exception as e:
-        logger.error(f"Error in before_request: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+    if not get_db():
+        return jsonify({"error": "Database connection failed"}), 503
 
 @app.teardown_request
 def teardown_request(exception=None):
     if exception:
-        logger.error(f"Exception in request: {str(exception)}")
+        print(f"Request error: {str(exception)}")
         db.session.rollback()
     db.session.remove()
 
-# 初始化数据库表
 def init_db():
     with app.app_context():
         try:
             db.create_all()
-            logger.info("Database initialized successfully")
+            print("Database tables created successfully")
         except Exception as e:
-            logger.error(f"Database initialization failed: {str(e)}")
-            logger.error(f"Database URL: {DATABASE_URL.split('@')[0]}@[HIDDEN]")
+            print(f"Database initialization failed: {str(e)}")
+            raise
 
 # 初始化登录管理器
 login_manager = LoginManager()
@@ -126,10 +123,10 @@ def load_user(user_id):
 @app.route('/')
 def index():
     try:
-        logger.info("Accessing index page")
+        print("Accessing index page")
         return render_template('index.html')
     except Exception as e:
-        logger.error(f"Error in index route: {str(e)}")
+        print(f"Error in index route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -151,13 +148,13 @@ def register():
             user.set_password(form.password.data)
             db.session.add(user)
             db.session.commit()
-            logger.info(f"New user registered: {user.username}")
+            print(f"New user registered: {user.username}")
             flash('Your account has been created! You can now log in.', 'success')
             return redirect(url_for('login'))
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Error in registration: {str(e)}")
-            logger.error(f"Traceback: {traceback.format_exc()}")
+            print(f"Error in registration: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")
             flash('An error occurred during registration. Please try again.', 'error')
             return render_template('register.html', form=form)
     
@@ -172,13 +169,13 @@ def login():
             user = User.query.filter_by(username=username).first()
             if user and user.check_password(password):
                 login_user(user)
-                logger.info(f"User {username} logged in successfully")
+                print(f"User {username} logged in successfully")
                 return redirect(url_for('dashboard'))
-            logger.warning(f"Failed login attempt for username: {username}")
+            print(f"Failed login attempt for username: {username}")
             flash('Invalid username or password')
         return render_template('login.html')
     except Exception as e:
-        logger.error(f"Error in login route: {str(e)}")
+        print(f"Error in login route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 class RegistrationForm(FlaskForm):
@@ -193,7 +190,6 @@ class RegistrationForm(FlaskForm):
 @login_required
 def dashboard():
     try:
-        # 示例数据 - 在实际应用中，这些数据应该从数据库获取
         recent_predictions = [
             {
                 'date': '2024-03-15',
@@ -215,10 +211,10 @@ def dashboard():
             }
         ]
         
-        logger.info(f"User {current_user.username} accessed dashboard")
+        print(f"User {current_user.username} accessed dashboard")
         return render_template('dashboard.html', recent_predictions=recent_predictions)
     except Exception as e:
-        logger.error(f"Error in dashboard route: {str(e)}")
+        print(f"Error in dashboard route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/logout')
@@ -227,47 +223,25 @@ def logout():
     try:
         username = current_user.username
         logout_user()
-        logger.info(f"User {username} logged out")
+        print(f"User {username} logged out")
         return redirect(url_for('index'))
     except Exception as e:
-        logger.error(f"Error in logout route: {str(e)}")
+        print(f"Error in logout route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/predict', methods=['GET', 'POST'])
 @login_required
 def predict():
     try:
-        # 示例数据 - 在实际应用中，这些数据应该从数据库获取
-        recent_predictions = [
-            {
-                'date': '2024-03-15',
-                'teams': 'Lakers vs Warriors',
-                'prediction': 'Lakers Win',
-                'result': 'Correct'
-            },
-            {
-                'date': '2024-03-14',
-                'teams': 'Celtics vs Bucks',
-                'prediction': 'Celtics Win',
-                'result': 'Incorrect'
-            },
-            {
-                'date': '2024-03-13',
-                'teams': 'Heat vs Nets',
-                'prediction': 'Heat Win',
-                'result': 'Correct'
-            }
-        ]
-
+        # 使用 dashboard 中的 recent_predictions
         if request.method == 'POST':
             home_team = request.form.get('home_team')
             away_team = request.form.get('away_team')
-            # 这里添加预测逻辑
-            prediction = "Home Team Win"  # 示例预测结果
-            win_probability = 75.5  # 示例概率
-            confidence_score = 80.0  # 示例置信度
+            prediction = "Home Team Win"
+            win_probability = 75.5
+            confidence_score = 80.0
             
-            logger.info(f"Prediction made for {home_team} vs {away_team}")
+            print(f"Prediction made for {home_team} vs {away_team}")
             return render_template('predict.html', 
                                 prediction=prediction,
                                 home_team=home_team,
@@ -278,17 +252,17 @@ def predict():
         
         return render_template('predict.html', recent_predictions=recent_predictions)
     except Exception as e:
-        logger.error(f"Error in predict route: {str(e)}")
+        print(f"Error in predict route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/models')
 @login_required
 def models():
     try:
-        logger.info(f"User {current_user.username} accessed models page")
+        print(f"User {current_user.username} accessed models page")
         return render_template('models.html')
     except Exception as e:
-        logger.error(f"Error in models route: {str(e)}")
+        print(f"Error in models route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 # 初始化数据库

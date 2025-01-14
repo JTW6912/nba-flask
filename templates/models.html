@@ -11,53 +11,74 @@
             <p class="text-gray-600">Compare and analyze different prediction models</p>
         </div>
 
-        <!-- Model Performance Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Logistic Regression</h3>
-                </div>
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Accuracy</span>
-                        <span class="font-semibold">82.2%</span>
+                <!-- Model Performance Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Logistic Regression</h3>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Accuracy</span>
+                                <span class="font-semibold">82.2%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-500 h-2 rounded-full" style="width: 82.2%"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-green-500 h-2 rounded-full" style="width: 82.2%"></div>
+        
+                    <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">Random Forest</h3>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Accuracy</span>
+                                <span class="font-semibold">80.5%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-500 h-2 rounded-full" style="width: 80.5%"></div>
+                            </div>
+                        </div>
+                    </div>
+        
+                    <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold">ELO Rating</h3>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600">Accuracy</span>
+                                <span class="font-semibold">75.8%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-500 h-2 rounded-full" style="width: 75.8%"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Random Forest</h3>
+        <!-- Model Description -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Model Description</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Logistic Regression</h3>
+                    <p class="text-gray-600">A statistical model that uses a logistic function to model a binary dependent variable. Best performing model with balanced accuracy and interpretability.</p>
                 </div>
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Accuracy</span>
-                        <span class="font-semibold">80.5%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-blue-500 h-2 rounded-full" style="width: 80.5%"></div>
-                    </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Random Forest</h3>
+                    <p class="text-gray-600">An ensemble learning method that operates by constructing multiple decision trees. Shows good performance with slightly lower interpretability.</p>
                 </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">ELO Rating</h3>
-                </div>
-                <div class="space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Accuracy</span>
-                        <span class="font-semibold">75.8%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-purple-500 h-2 rounded-full" style="width: 75.8%"></div>
-                    </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">ELO Rating</h3>
+                    <p class="text-gray-600">A rating system originally designed for chess, adapted for NBA games. Simple but effective for basic predictions.</p>
                 </div>
             </div>
         </div>
+
+
 
         <!-- Confusion Matrices -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -115,25 +136,6 @@
                         Comparison of model performance using ROC curves. Random Forest shows the best performance with AUC = 0.94, 
                         followed by Logistic Regression with AUC = 0.90, while ELO Rating performs at baseline with AUC = 0.50.
                     </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Model Description -->
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-bold mb-4">Model Description</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                    <h3 class="text-lg font-semibold mb-2">Logistic Regression</h3>
-                    <p class="text-gray-600">A statistical model that uses a logistic function to model a binary dependent variable. Best performing model with balanced accuracy and interpretability.</p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-2">Random Forest</h3>
-                    <p class="text-gray-600">An ensemble learning method that operates by constructing multiple decision trees. Shows good performance with slightly lower interpretability.</p>
-                </div>
-                <div>
-                    <h3 class="text-lg font-semibold mb-2">ELO Rating</h3>
-                    <p class="text-gray-600">A rating system originally designed for chess, adapted for NBA games. Simple but effective for basic predictions.</p>
                 </div>
             </div>
         </div>
