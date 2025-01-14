@@ -78,7 +78,23 @@
             </div>
         </div>
 
-
+        <!-- Performance Comparison Chart -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">Model Performance Metrics</h2>
+            <div class="flex justify-center">
+                <div class="w-3/4 md:w-2/3 lg:w-1/2">
+                    <div class="p-4">
+                        <img src="{{ url_for('static', filename='img/performance_comparison.png') }}" 
+                             alt="Model Performance Comparison" 
+                             class="w-full rounded-lg shadow-sm">
+                        <p class="text-gray-600 mt-4 text-center text-sm">
+                            Comprehensive comparison of model performance metrics including Accuracy, Precision, Recall, and F1 Score.
+                            Logistic Regression shows the highest overall performance across metrics.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Confusion Matrices -->
         <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
