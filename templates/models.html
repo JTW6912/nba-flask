@@ -16,7 +16,6 @@
             <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold">Logistic Regression</h3>
-                    <div class="text-3xl">🎯</div>
                 </div>
                 <div class="space-y-2">
                     <div class="flex justify-between items-center">
@@ -32,7 +31,6 @@
             <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold">Random Forest</h3>
-                    <div class="text-3xl">🌲</div>
                 </div>
                 <div class="space-y-2">
                     <div class="flex justify-between items-center">
@@ -48,7 +46,6 @@
             <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-lg font-semibold">ELO Rating</h3>
-                    <div class="text-3xl">📊</div>
                 </div>
                 <div class="space-y-2">
                     <div class="flex justify-between items-center">
@@ -102,6 +99,22 @@
                     <img src="{{ url_for('static', filename='img/random_forest/feature_importance.png') }}" 
                          alt="Random Forest Features" 
                          class="w-full rounded-lg shadow-sm">
+                </div>
+            </div>
+        </div>
+
+        <!-- ROC Curves -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h2 class="text-xl font-bold mb-4">ROC Curves Comparison</h2>
+            <div class="flex justify-center">
+                <div class="w-1/2">
+                    <img src="{{ url_for('static', filename='img/roc_curves_comparison.png') }}" 
+                         alt="ROC Curves Comparison" 
+                         class="w-full rounded-lg shadow-sm">
+                    <p class="text-gray-600 mt-4 text-center">
+                        Comparison of model performance using ROC curves. Random Forest shows the best performance with AUC = 0.94, 
+                        followed by Logistic Regression with AUC = 0.90, while ELO Rating performs at baseline with AUC = 0.50.
+                    </p>
                 </div>
             </div>
         </div>

@@ -6,16 +6,20 @@ import os
 from datetime import datetime
 from dotenv import load_dotenv
 import logging
+import sys
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Length, EqualTo
-import socket
-
-# Force IPv4
-socket.getaddrinfo('db.kbbpkicqzobcrbhhcrzz.supabase.co', 5432, socket.AF_INET)
+from sqlalchemy import text
+import traceback
+import urllib.parse
 
 # 配置日志
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout
+)
 logger = logging.getLogger(__name__)
 
 load_dotenv()  # 加载 .env 文件中的环境变量
@@ -24,61 +28,77 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
 
 # 配置数据库连接
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+MYSQL_USER = os.environ.get('MYSQLUSER', 'root')
+MYSQL_PASSWORD = os.environ.get('MYSQLPASSWORD')
+MYSQL_HOST = os.environ.get('MYSQLHOST')
+MYSQL_PORT = os.environ.get('MYSQLPORT', '3306')
+MYSQL_DATABASE = os.environ.get('MYSQL_DATABASE')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_size': 1,
-    'pool_timeout': 30,
-    'pool_recycle': 1800,
-    'pool_pre_ping': True,
-    'connect_args': {
-        'connect_timeout': 10,
-        'application_name': 'nba-flask',
-        'keepalives': 1,
-        'keepalives_idle': 30,
-        'keepalives_interval': 10,
-        'keepalives_count': 5,
-        'sslmode': 'require'
+if all([MYSQL_USER, MYSQL_PASSWORD, MYSQL_HOST, MYSQL_DATABASE]):
+    # 构建MySQL连接URL
+    DATABASE_URL = f"mysql+mysqlconnector://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
+    
+    # 配置 SQLAlchemy
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_size': int(os.environ.get('MAX_POOL_SIZE', '1')),
+        'pool_timeout': 30,
+        'pool_recycle': 1800,
+        'pool_pre_ping': True,
+        'connect_args': {
+            'connect_timeout': 60,
+            'use_pure': True
+        }
     }
-}
+    logger.info("Database configuration completed")
+else:
+    logger.error("Missing required MySQL environment variables")
+    raise ValueError("Required MySQL environment variables are missing")
 
 # 初始化数据库
 db = SQLAlchemy(app)
 
 def get_db():
     try:
-        db.session.execute('SELECT 1')
+        result = db.session.execute(text('SELECT 1')).fetchone()
+        logger.info(f"Database connection test successful: {result}")
         return True
     except Exception as e:
         logger.error(f"Database connection error: {str(e)}")
-        db.session.rollback()
+        logger.error(f"Database URL format: {DATABASE_URL.split('@')[0]}@[HIDDEN]")
+        logger.error(f"Engine options: {app.config['SQLALCHEMY_ENGINE_OPTIONS']}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
         return False
 
 # 数据库连接管理
 @app.before_request
 def before_request():
-    if not get_db():
-        return jsonify({"error": "Database connection failed"}), 500
+    try:
+        if not get_db():
+            return jsonify({"error": "Database connection failed"}), 500
+    except Exception as e:
+        logger.error(f"Error in before_request: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 @app.teardown_request
 def teardown_request(exception=None):
     if exception:
+        logger.error(f"Exception in request: {str(exception)}")
         db.session.rollback()
     db.session.remove()
 
-# 创建数据库表
-with app.app_context():
-    try:
-        db.create_all()
-        logger.info("Database initialized successfully")
-    except Exception as e:
-        logger.error(f"Database initialization failed: {str(e)}")
-        logger.error(f"Database URL: {DATABASE_URL.split('@')[0]}@[HIDDEN]")
+# 初始化数据库表
+def init_db():
+    with app.app_context():
+        try:
+            db.create_all()
+            logger.info("Database initialized successfully")
+        except Exception as e:
+            logger.error(f"Database initialization failed: {str(e)}")
+            logger.error(f"Database URL: {DATABASE_URL.split('@')[0]}@[HIDDEN]")
 
+# 初始化登录管理器
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -102,18 +122,6 @@ class User(UserMixin, db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Error handlers
-@app.errorhandler(500)
-def internal_error(error):
-    logger.error(f"500 error: {str(error)}")
-    db.session.rollback()
-    return jsonify({"error": "Internal server error", "details": str(error)}), 500
-
-@app.errorhandler(404)
-def not_found_error(error):
-    logger.error(f"404 error: {str(error)}")
-    return jsonify({"error": "Not found"}), 404
-
 # Routes
 @app.route('/')
 def index():
@@ -123,6 +131,37 @@ def index():
     except Exception as e:
         logger.error(f"Error in index route: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    form = RegistrationForm()
+    if form.validate_on_submit():
+        try:
+            # 检查用户名是否已存在
+            existing_user = User.query.filter_by(username=form.username.data).first()
+            if existing_user:
+                flash('Username already exists. Please choose a different one.', 'error')
+                return render_template('register.html', form=form)
+            
+            # 创建新用户
+            user = User(username=form.username.data)
+            user.set_password(form.password.data)
+            db.session.add(user)
+            db.session.commit()
+            logger.info(f"New user registered: {user.username}")
+            flash('Your account has been created! You can now log in.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error in registration: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            flash('An error occurred during registration. Please try again.', 'error')
+            return render_template('register.html', form=form)
+    
+    return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -149,22 +188,6 @@ class RegistrationForm(FlaskForm):
         DataRequired(),
         EqualTo('password', message='Passwords must match')
     ])
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
-    
-    form = RegistrationForm()
-    if form.validate_on_submit():
-        user = User(username=form.username.data)
-        user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        flash('Your account has been created! You can now log in.', 'success')
-        return redirect(url_for('login'))
-    
-    return render_template('register.html', form=form)
 
 @app.route('/dashboard')
 @login_required
@@ -268,12 +291,8 @@ def models():
         logger.error(f"Error in models route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+# 初始化数据库
+init_db()
+
 if __name__ == '__main__':
-    with app.app_context():
-        try:
-            db.create_all()
-            logger.info("Database tables created successfully")
-        except Exception as e:
-            logger.error(f"Error creating database tables: {str(e)}")
-            raise
     app.run(debug=True) 
