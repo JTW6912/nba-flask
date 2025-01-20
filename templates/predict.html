@@ -63,15 +63,15 @@
     <div class="grid grid-cols-1 gap-4">
         {% for prediction in predictions %}
         <div class="bg-white rounded-lg shadow p-4">
-            <div class="grid grid-cols-1 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <!-- 左侧：比赛信息 -->
                 <div class="text-center sm:text-left">
                     <div class="text-sm text-gray-600 mb-2">
                         {{ prediction.game_info.date.strftime('%Y-%m-%d') }} | 
                         {{ prediction.game_info.season }} ({{ prediction.game_info.season_type }})
                     </div>
-                    <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-                        <div class="text-center flex-1">
+                    <div class="flex items-center justify-between space-x-4">
+                        <div class="flex-1 text-center">
                             <div class="font-bold">{{ prediction.teams.home_team }}</div>
                             {% if prediction.score.home_score is not none %}
                             <div class="text-lg font-bold">{{ prediction.score.home_score }}</div>
@@ -81,7 +81,7 @@
                             <div class="text-sm font-bold">VS</div>
                             <div class="text-xs mt-1">{{ prediction.score.status }}</div>
                         </div>
-                        <div class="text-center flex-1">
+                        <div class="flex-1 text-center">
                             <div class="font-bold">{{ prediction.teams.away_team }}</div>
                             {% if prediction.score.away_score is not none %}
                             <div class="text-lg font-bold">{{ prediction.score.away_score }}</div>
@@ -94,54 +94,65 @@
                 </div>
 
                 <!-- 中间：模型预测 -->
-                <div class="space-y-4 border-t border-b border-gray-100 py-4 sm:py-2 sm:border-0">
-                    <div class="text-sm">
-                        <span class="font-semibold">Logistic Regression:</span><br>
-                        {% if prediction.score.home_score is none %}
-                            <div class="mt-1">
-                                <span class="font-medium">{{ prediction.teams.home_team }}:</span> 
-                                {{ "%.1f"|format(prediction.model_predictions.logistic_regression.home_win_prob * 100) }}%<br>
-                                <span class="font-medium">{{ prediction.teams.away_team }}:</span> 
-                                {{ "%.1f"|format(prediction.model_predictions.logistic_regression.away_win_prob * 100) }}%
+                <div class="sm:border-l sm:border-r border-gray-100 px-4">
+                    <div class="space-y-3">
+                        <div class="text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="font-semibold">Logistic Regression:</span>
+                                {% if prediction.score.home_score is none %}
+                                <span class="text-xs text-gray-500">(Win Probability)</span>
+                                {% endif %}
                             </div>
-                        {% else %}
-                            Home: {{ "%.1f"|format(prediction.model_predictions.logistic_regression.home_win_prob * 100) }}% | 
-                            Away: {{ "%.1f"|format(prediction.model_predictions.logistic_regression.away_win_prob * 100) }}%
-                        {% endif %}
-                    </div>
-                    <div class="text-sm">
-                        <span class="font-semibold">Random Forest:</span><br>
-                        {% if prediction.score.home_score is none %}
-                            <div class="mt-1">
-                                <span class="font-medium">{{ prediction.teams.home_team }}:</span> 
-                                {{ "%.1f"|format(prediction.model_predictions.random_forest.home_win_prob * 100) }}%<br>
-                                <span class="font-medium">{{ prediction.teams.away_team }}:</span> 
-                                {{ "%.1f"|format(prediction.model_predictions.random_forest.away_win_prob * 100) }}%
+                            <div class="mt-1 grid grid-cols-2 gap-2">
+                                <div class="text-right pr-2 border-r border-gray-100">
+                                    <span class="text-gray-600">{{ prediction.teams.home_team }}:</span>
+                                    <span class="font-medium">{{ "%.1f"|format(prediction.model_predictions.logistic_regression.home_win_prob * 100) }}%</span>
+                                </div>
+                                <div class="text-left pl-2">
+                                    <span class="text-gray-600">{{ prediction.teams.away_team }}:</span>
+                                    <span class="font-medium">{{ "%.1f"|format(prediction.model_predictions.logistic_regression.away_win_prob * 100) }}%</span>
+                                </div>
                             </div>
-                        {% else %}
-                            Home: {{ "%.1f"|format(prediction.model_predictions.random_forest.home_win_prob * 100) }}% | 
-                            Away: {{ "%.1f"|format(prediction.model_predictions.random_forest.away_win_prob * 100) }}%
-                        {% endif %}
+                        </div>
+                        <div class="text-sm">
+                            <div class="flex items-center justify-between">
+                                <span class="font-semibold">Random Forest:</span>
+                                {% if prediction.score.home_score is none %}
+                                <span class="text-xs text-gray-500">(Win Probability)</span>
+                                {% endif %}
+                            </div>
+                            <div class="mt-1 grid grid-cols-2 gap-2">
+                                <div class="text-right pr-2 border-r border-gray-100">
+                                    <span class="text-gray-600">{{ prediction.teams.home_team }}:</span>
+                                    <span class="font-medium">{{ "%.1f"|format(prediction.model_predictions.random_forest.home_win_prob * 100) }}%</span>
+                                </div>
+                                <div class="text-left pl-2">
+                                    <span class="text-gray-600">{{ prediction.teams.away_team }}:</span>
+                                    <span class="font-medium">{{ "%.1f"|format(prediction.model_predictions.random_forest.away_win_prob * 100) }}%</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <!-- 右侧：预测结果 -->
-                <div class="flex justify-center sm:justify-end">
+                <div class="flex flex-col justify-center items-center sm:items-end">
                     {% if prediction.score.home_score is none %}
                         <!-- 未开始的比赛显示预测结果 -->
-                        <div class="text-sm text-center sm:text-right">
-                            <span class="font-semibold">Predicted Winner:</span><br>
-                            <div class="mt-2">
-                                <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                                    RF: {{ prediction.model_predictions.random_forest.prediction.winner }}
+                        <div class="text-center sm:text-right">
+                            <div class="text-sm text-gray-600 mb-1">Predicted Winner</div>
+                            <div class="inline-flex items-center">
+                                <span class="px-3 py-1 rounded-full text-sm bg-gradient-to-r from-green-50 to-green-100 text-green-800 font-medium border border-green-200">
+                                    {{ prediction.model_predictions.random_forest.prediction.winner }}
                                 </span>
                             </div>
                         </div>
                     {% else %}
                         <!-- 已完成的比赛显示实际结果 -->
                         {% if prediction.prediction_result.correct is not none %}
-                        <div class="mt-2">
-                            <span class="px-2 py-1 rounded-full text-xs {% if prediction.prediction_result.correct %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                        <div class="text-center sm:text-right">
+                            <div class="text-sm text-gray-600 mb-1">Prediction Result</div>
+                            <span class="px-3 py-1 rounded-full text-sm {% if prediction.prediction_result.correct %}bg-gradient-to-r from-green-50 to-green-100 text-green-800 border border-green-200{% else %}bg-gradient-to-r from-red-50 to-red-100 text-red-800 border border-red-200{% endif %} font-medium">
                                 {{ "Correct" if prediction.prediction_result.correct else "Incorrect" }}
                             </span>
                         </div>

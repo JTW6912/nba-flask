@@ -2,29 +2,39 @@
 
 A machine learning-powered web application for predicting NBA game outcomes with high accuracy.
 
-[Insert Hero Image Here]
+![image-20250120144429114](./assets/image-20250120144429114.png)![image-20250120144453268](./assets/image-20250120144453268.png)
 
 ## 🌟 Features
 
-- **Advanced ML Models**: Utilizes Logistic Regression and Random Forest algorithms for game predictions
+- **Advanced ML Models**: Utilizes Logistic Regression, Random Forest algorithms, ELO three models for game predictions
 - **Real-time Data**: Up-to-date NBA game statistics and team performance metrics
 - **Interactive Dashboard**: Track prediction accuracy and view upcoming games
 - **User Authentication**: Secure login system for personalized experience
-- **Responsive Design**: Optimized for both desktop and mobile devices
+- **Responsive Design**: Optimised for both desktop and mobile devices
 
 ## 📊 Model Performance
 
-[Insert Model Performance Comparison Chart]
+### accuracy
 
-Our prediction models achieve impressive accuracy rates:
-- Logistic Regression: 82.2% accuracy
-- Random Forest: 84.5% accuracy
+![image-20250120144539093](./assets/image-20250120144539093.png)
+
+### Performance comparsion
+
+<img src="./assets/image-20250120144549889.png" alt="image-20250120144549889" style="zoom:50%;" />
 
 ## 🚀 Live Demo
 
-Experience the platform live at: [Insert Platform URL]
+Experience the platform live at: https://nba-smart.vercel.app/
 
-[Insert Dashboard Screenshot]
+![image-20250120144856606](./assets/image-20250120144856606.png)
+
+### result display
+
+![image-20250120145331503](./assets/image-20250120145331503.png)
+
+### game which is finished
+
+![image-20250120145359943](./assets/image-20250120145359943.png)
 
 ## 🛠 Tech Stack
 
@@ -54,7 +64,7 @@ Experience the platform live at: [Insert Platform URL]
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/nba-predictor.git
+git clone https://github.com/JTW6912/nba-flask.git
 cd nba-predictor
 ```
 
@@ -87,27 +97,31 @@ python app.py
 
 ## 📱 Mobile View
 
-[Insert Mobile Screenshots]
+
 
 ## 📈 Model Details
 
-### Logistic Regression
-[Insert Logistic Regression Metrics]
+### Matrix Analysis
 
-- Feature importance visualization
-- Confusion matrix
-- Performance metrics
+![image-20250120144641469](./assets/image-20250120144641469.png)
 
-### Random Forest
-[Insert Random Forest Metrics]
+### Feature importance
 
-- Feature importance visualization
-- Confusion matrix
-- Performance metrics
+![image-20250120144749408](./assets/image-20250120144749408.png)
+
+### ROC curve
+
+<img src="./assets/image-20250120144803159.png" alt="image-20250120144803159" style="zoom: 33%;" />
 
 ## 🔄 Data Pipeline
 
-[Insert Data Pipeline Diagram]
+### Database
+
+- using railway cloud server MYSQL
+
+![image-20250120145745139](./assets/image-20250120145745139.png)
+
+![image-20250120145807931](./assets/image-20250120145807931.png)
 
 Our system continuously updates with:
 - Real-time game data
@@ -143,24 +157,13 @@ Our system continuously updates with:
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Team
-
-- [Your Name] - Full Stack Developer & ML Engineer
-- [Add team members if any]
-
 ## 📬 Contact
 
 For any queries or suggestions, please reach out to:
-- Email: [Your Email]
-- GitHub: [@yourusername](https://github.com/yourusername)
+- Email: wjt6912@gmail.com
 
 ## 🙏 Acknowledgments
 
-- NBA Stats API
 - Scikit-learn community
 - Flask framework
 - Tailwind CSS team
