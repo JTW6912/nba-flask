@@ -17,34 +17,34 @@
 {% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-12">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-6 sm:py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Welcome Section -->
-        <div class="mb-10 bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-all">
-            <div class="flex items-center justify-between">
+        <div class="mb-6 sm:mb-10 bg-white rounded-xl sm:rounded-2xl p-4 sm:p-8 shadow-sm hover:shadow-md transition-all">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ current_user.username }}! 👋</h1>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Welcome back, {{ current_user.username }}! 👋</h1>
                     <p class="mt-2 text-gray-600">Here's your prediction dashboard overview</p>
                 </div>
-                <div class="text-right">
+                <div class="text-left sm:text-right">
                     <p class="text-sm text-gray-500">Last updated</p>
-                    <p class="text-lg font-medium text-gray-900">{{ stats.last_update.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p class="text-base sm:text-lg font-medium text-gray-900">{{ stats.last_update.strftime('%Y-%m-%d %H:%M') }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Navigation Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-10">
             <!-- Models Card -->
             <a href="{{ url_for('models') }}" class="nav-card block">
-                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-sm hover:shadow-md">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold">Model Information</h3>
-                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                            <i class="fas fa-brain text-2xl"></i>
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-sm hover:shadow-md">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <h3 class="text-lg sm:text-xl font-semibold">Model Information</h3>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <i class="fas fa-brain text-xl sm:text-2xl"></i>
                         </div>
                     </div>
-                    <p class="text-white/80 mb-4">Learn about our prediction models and their performance</p>
+                    <p class="text-white/80 mb-3 sm:mb-4 text-sm sm:text-base">Learn about our prediction models and their performance</p>
                     <div class="flex items-center text-sm">
                         <span>View Details</span>
                         <i class="fas fa-arrow-right ml-2"></i>
@@ -54,14 +54,14 @@
 
             <!-- Predictions Card -->
             <a href="{{ url_for('predict') }}" class="nav-card block">
-                <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 text-white shadow-sm hover:shadow-md">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-xl font-semibold">Prediction Data</h3>
-                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                            <i class="fas fa-chart-line text-2xl"></i>
+                <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-sm hover:shadow-md">
+                    <div class="flex items-center justify-between mb-3 sm:mb-4">
+                        <h3 class="text-lg sm:text-xl font-semibold">Prediction Data</h3>
+                        <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <i class="fas fa-chart-line text-xl sm:text-2xl"></i>
                         </div>
                     </div>
-                    <p class="text-white/80 mb-4">View all predictions and their outcomes</p>
+                    <p class="text-white/80 mb-3 sm:mb-4 text-sm sm:text-base">View all predictions and their outcomes</p>
                     <div class="flex items-center text-sm">
                         <span>View Predictions</span>
                         <i class="fas fa-arrow-right ml-2"></i>
@@ -71,81 +71,81 @@
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-10">
             <!-- Total Predictions -->
-            <div class="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-sm p-6 hover:shadow-md transition-all text-white">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Total Predictions</h3>
-                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                        <i class="fas fa-chart-bar text-2xl"></i>
+            <div class="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-all text-white">
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                    <h3 class="text-base sm:text-lg font-semibold">Total Predictions</h3>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <i class="fas fa-chart-bar text-xl sm:text-2xl"></i>
                     </div>
                 </div>
-                <p class="text-4xl font-bold mb-2">{{ stats.total_predictions }}</p>
+                <p class="text-3xl sm:text-4xl font-bold mb-2">{{ stats.total_predictions }}</p>
                 <p class="text-sm text-white/80">Games predicted so far</p>
             </div>
 
             <!-- Accuracy Rate -->
-            <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-sm p-6 hover:shadow-md transition-all text-white">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Accuracy Rate</h3>
-                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                        <i class="fas fa-bullseye text-2xl"></i>
+            <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-all text-white">
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                    <h3 class="text-base sm:text-lg font-semibold">Accuracy Rate</h3>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <i class="fas fa-bullseye text-xl sm:text-2xl"></i>
                     </div>
                 </div>
-                <p class="text-4xl font-bold mb-2">{{ "%.1f"|format(stats.accuracy_rate) }}%</p>
+                <p class="text-3xl sm:text-4xl font-bold mb-2">{{ "%.1f"|format(stats.accuracy_rate) }}%</p>
                 <p class="text-sm text-white/80">{{ stats.correct_predictions }} correct predictions</p>
             </div>
 
             <!-- Page Views -->
-            <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-sm p-6 hover:shadow-md transition-all text-white">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold">Page Views</h3>
-                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                        <i class="fas fa-eye text-2xl"></i>
+            <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-all text-white">
+                <div class="flex items-center justify-between mb-3 sm:mb-4">
+                    <h3 class="text-base sm:text-lg font-semibold">Page Views</h3>
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <i class="fas fa-eye text-xl sm:text-2xl"></i>
                     </div>
                 </div>
-                <p class="text-4xl font-bold mb-2">{{ stats.page_views }}</p>
+                <p class="text-3xl sm:text-4xl font-bold mb-2">{{ stats.page_views }}</p>
                 <p class="text-sm text-white/80">Total dashboard visits</p>
             </div>
         </div>
 
         <!-- Upcoming Games Section -->
-        <div class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-md transition-all">
-            <div class="flex items-center justify-between mb-8">
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900">Upcoming Games</h2>
+        <div class="bg-white rounded-xl sm:rounded-2xl shadow-sm p-4 sm:p-8 hover:shadow-md transition-all">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
+                <div class="mb-4 sm:mb-0">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Upcoming Games</h2>
                     <p class="text-sm text-gray-500 mt-1">Next 5 games predictions</p>
                 </div>
-                <span class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
+                <span class="inline-flex items-center px-3 py-1 sm:px-4 sm:py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
                     <i class="fas fa-calendar-alt mr-2"></i>Upcoming
                 </span>
             </div>
             
-            <div class="space-y-8">
+            <div class="space-y-6 sm:space-y-8">
                 {% for game in upcoming_games %}
-                <div class="border-b border-gray-100 pb-8 last:border-b-0 last:pb-0">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center space-x-8">
-                            <div class="text-right">
-                                <p class="text-lg font-bold text-gray-900">{{ game.home_team_name }}</p>
+                <div class="border-b border-gray-100 pb-6 sm:pb-8 last:border-b-0 last:pb-0">
+                    <div class="flex flex-col sm:flex-row items-center justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0">
+                        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-8 w-full sm:w-auto">
+                            <div class="text-center sm:text-right">
+                                <p class="text-base sm:text-lg font-bold text-gray-900">{{ game.home_team_name }}</p>
                                 <p class="text-sm text-indigo-600 font-medium">Home Team</p>
                             </div>
-                            <div class="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center">
-                                <span class="text-xl font-bold text-white">VS</span>
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-gray-900 rounded-full flex items-center justify-center">
+                                <span class="text-lg sm:text-xl font-bold text-white">VS</span>
                             </div>
-                            <div class="text-left">
-                                <p class="text-lg font-bold text-gray-900">{{ game.away_team_name }}</p>
+                            <div class="text-center sm:text-left">
+                                <p class="text-base sm:text-lg font-bold text-gray-900">{{ game.away_team_name }}</p>
                                 <p class="text-sm text-indigo-600 font-medium">Away Team</p>
                             </div>
                         </div>
-                        <div class="text-right">
+                        <div class="text-center sm:text-right">
                             <p class="text-sm font-medium text-gray-500">Game Date</p>
-                            <p class="text-lg font-bold text-gray-900">{{ game.game_date.strftime('%Y-%m-%d') }}</p>
+                            <p class="text-base sm:text-lg font-bold text-gray-900">{{ game.game_date.strftime('%Y-%m-%d') }}</p>
                         </div>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-6">
-                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 sm:p-6">
                             <h4 class="text-sm font-semibold text-gray-900 mb-4">
                                 <i class="fas fa-brain text-indigo-600 mr-2"></i>Logistic Regression
                             </h4>
@@ -166,7 +166,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6">
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 sm:p-6">
                             <h4 class="text-sm font-semibold text-gray-900 mb-4">
                                 <i class="fas fa-tree text-green-600 mr-2"></i>Random Forest
                             </h4>

@@ -3,52 +3,54 @@
 {% block title %}Predictions{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
+<div class="container mx-auto px-4 py-6 sm:py-8">
     <!-- 标题和控件区域 -->
     <div class="mb-6 space-y-4">
-        <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold">NBA Game Predictions</h1>
-            <div class="flex items-center space-x-2">
-                <span class="text-sm text-gray-600">Sort by date:</span>
-                <a href="{{ url_for('predict', sort='asc', page=page, date_filter=date_filter, start_date=start_date) }}" 
-                   class="px-3 py-1 text-sm rounded-lg {% if sort_order == 'asc' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-                    Oldest First
-                </a>
-                <a href="{{ url_for('predict', sort='desc', page=page, date_filter=date_filter, start_date=start_date) }}" 
-                   class="px-3 py-1 text-sm rounded-lg {% if sort_order == 'desc' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-                    Newest First
-                </a>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <h1 class="text-xl sm:text-2xl font-bold">NBA Game Predictions</h1>
+            <div class="flex items-center space-x-2 w-full sm:w-auto">
+                <span class="text-sm text-gray-600 hidden sm:inline">Sort by date:</span>
+                <div class="flex items-center space-x-2 w-full sm:w-auto">
+                    <a href="{{ url_for('predict', sort='asc', page=page, date_filter=date_filter, start_date=start_date) }}" 
+                       class="flex-1 sm:flex-none text-center px-3 py-1 text-sm rounded-lg {% if sort_order == 'asc' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        Oldest First
+                    </a>
+                    <a href="{{ url_for('predict', sort='desc', page=page, date_filter=date_filter, start_date=start_date) }}" 
+                       class="flex-1 sm:flex-none text-center px-3 py-1 text-sm rounded-lg {% if sort_order == 'desc' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                        Newest First
+                    </a>
+                </div>
             </div>
         </div>
         
         <!-- 日期筛选 -->
-        <div class="flex items-center space-x-4 bg-gray-50 p-3 rounded-lg">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 bg-gray-50 p-3 rounded-lg">
             <span class="text-sm text-gray-600">Filter by date:</span>
-            <div class="flex space-x-2">
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                 <a href="{{ url_for('predict', date_filter='all', sort=sort_order) }}" 
-                   class="px-3 py-1 text-sm rounded-lg {% if date_filter == 'all' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                   class="flex-1 sm:flex-none text-center px-3 py-1 text-sm rounded-lg {% if date_filter == 'all' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                     All Games
                 </a>
                 <a href="{{ url_for('predict', date_filter='7d', sort=sort_order) }}" 
-                   class="px-3 py-1 text-sm rounded-lg {% if date_filter == '7d' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                   class="flex-1 sm:flex-none text-center px-3 py-1 text-sm rounded-lg {% if date_filter == '7d' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                     Next 7 Days
                 </a>
                 <a href="{{ url_for('predict', date_filter='30d', sort=sort_order) }}" 
-                   class="px-3 py-1 text-sm rounded-lg {% if date_filter == '30d' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                   class="flex-1 sm:flex-none text-center px-3 py-1 text-sm rounded-lg {% if date_filter == '30d' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                     Next 30 Days
                 </a>
                 <a href="{{ url_for('predict', date_filter='1y', sort=sort_order) }}" 
-                   class="px-3 py-1 text-sm rounded-lg {% if date_filter == '1y' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                   class="flex-1 sm:flex-none text-center px-3 py-1 text-sm rounded-lg {% if date_filter == '1y' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                     Next Year
                 </a>
             </div>
             
             <!-- 自定义日期选择 -->
-            <form class="flex items-center space-x-2" method="get" action="{{ url_for('predict') }}">
+            <form class="flex items-center space-x-2 w-full sm:w-auto" method="get" action="{{ url_for('predict') }}">
                 <input type="hidden" name="date_filter" value="custom">
                 <input type="hidden" name="sort" value="{{ sort_order }}">
                 <input type="date" name="start_date" value="{{ start_date }}" 
-                       class="px-3 py-1 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                       class="flex-1 sm:flex-none px-3 py-1 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <button type="submit" 
                         class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
                     Apply
@@ -61,14 +63,14 @@
     <div class="grid grid-cols-1 gap-4">
         {% for prediction in predictions %}
         <div class="bg-white rounded-lg shadow p-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 gap-4">
                 <!-- 左侧：比赛信息 -->
-                <div>
+                <div class="text-center sm:text-left">
                     <div class="text-sm text-gray-600 mb-2">
                         {{ prediction.game_info.date.strftime('%Y-%m-%d') }} | 
                         {{ prediction.game_info.season }} ({{ prediction.game_info.season_type }})
                     </div>
-                    <div class="flex justify-between items-center">
+                    <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
                         <div class="text-center flex-1">
                             <div class="font-bold">{{ prediction.teams.home_team }}</div>
                             {% if prediction.score.home_score is not none %}
@@ -78,8 +80,7 @@
                         <div class="text-center px-2">
                             <div class="text-sm font-bold">VS</div>
                             <div class="text-xs mt-1">{{ prediction.score.status }}</div>
-                        </div><div class="text-sm">
-                    </div>
+                        </div>
                         <div class="text-center flex-1">
                             <div class="font-bold">{{ prediction.teams.away_team }}</div>
                             {% if prediction.score.away_score is not none %}
@@ -93,7 +94,7 @@
                 </div>
 
                 <!-- 中间：模型预测 -->
-                <div class="space-y-2">
+                <div class="space-y-4 border-t border-b border-gray-100 py-4 sm:py-2 sm:border-0">
                     <div class="text-sm">
                         <span class="font-semibold">Logistic Regression:</span><br>
                         {% if prediction.score.home_score is none %}
@@ -125,14 +126,12 @@
                 </div>
 
                 <!-- 右侧：预测结果 -->
-                <div class="flex flex-col justify-center">
+                <div class="flex justify-center sm:justify-end">
                     {% if prediction.score.home_score is none %}
                         <!-- 未开始的比赛显示预测结果 -->
-
-                        <div class="mt-2 text-sm">
+                        <div class="text-sm text-center sm:text-right">
                             <span class="font-semibold">Predicted Winner:</span><br>
-
-                            <div class="mt-1">
+                            <div class="mt-2">
                                 <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
                                     RF: {{ prediction.model_predictions.random_forest.prediction.winner }}
                                 </span>
@@ -140,7 +139,6 @@
                         </div>
                     {% else %}
                         <!-- 已完成的比赛显示实际结果 -->
-
                         {% if prediction.prediction_result.correct is not none %}
                         <div class="mt-2">
                             <span class="px-2 py-1 rounded-full text-xs {% if prediction.prediction_result.correct %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
@@ -156,11 +154,11 @@
     </div>
     
     <!-- 分页 -->
-    <div class="mt-6 flex justify-between items-center">
-        <div class="text-sm text-gray-600">
+    <div class="mt-6 flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+        <div class="text-sm text-gray-600 text-center sm:text-left">
             Showing {{ predictions|length }} of {{ total_records }} records
         </div>
-        <div class="flex items-center space-x-2">
+        <div class="flex flex-wrap justify-center sm:justify-end items-center gap-2">
             {% if page > 1 %}
             <a href="{{ url_for('predict', page=1, sort=sort_order, date_filter=date_filter, start_date=start_date) }}" 
                class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">First</a>
@@ -175,11 +173,11 @@
                 {% if start_date %}
                 <input type="hidden" name="start_date" value="{{ start_date }}">
                 {% endif %}
-                <div class="flex items-center">
+                <div class="flex items-center space-x-1">
                     <input type="number" name="page" value="{{ page }}" min="1" max="{{ total_pages }}"
                            class="w-16 px-2 py-1 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                            title="Enter page number (1-{{ total_pages }})">
-                    <span class="mx-1 text-sm text-gray-600">of {{ total_pages }}</span>
+                    <span class="text-sm text-gray-600">of {{ total_pages }}</span>
                 </div>
                 <button type="submit" 
                         class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
