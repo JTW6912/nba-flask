@@ -10,7 +10,8 @@ A machine learning-powered web application for predicting NBA game outcomes with
 - **Real-time Data**: Up-to-date NBA game statistics and team performance metrics
 - **Interactive Dashboard**: Track prediction accuracy and view upcoming games
 - **User Authentication**: Secure login system for personalized experience
-- **Responsive Design**: Optimised for both desktop and mobile devices
+- **Modern UI Design**: Powered by v0 AI design system, featuring intuitive layouts and smooth interactions
+- **Responsive Design**: Optimized for both desktop and mobile devices
 
 ## 📊 Model Performance
 
@@ -36,11 +37,22 @@ Experience the platform live at: https://nba-smart.vercel.app/
 
 ![image-20250120145359943](./assets/image-20250120145359943.png)
 
+## 🎨 UI Design
+
+Our platform's user interface is primarily designed using v0 AI, a cutting-edge AI-powered design system. This approach ensures:
+
+- **Consistent Design Language**: Unified visual elements across all pages
+- **Intuitive Navigation**: AI-optimized user flows and interaction patterns
+- **Modern Aesthetics**: Clean, professional look with carefully chosen color schemes
+- **Responsive Layouts**: Seamlessly adapts to different screen sizes
+- **Enhanced User Experience**: AI-driven component placement and spacing
+
 ## 🛠 Tech Stack
 
 - **Backend**: Python, Flask
 - **Database**: MySQL
 - **Frontend**: HTML, Tailwind CSS, JavaScript
+- **UI Design**: v0 AI Design System
 - **ML Libraries**: Scikit-learn
 - **Deployment**: Vercel
 
@@ -97,7 +109,7 @@ python app.py
 
 ## 📱 Mobile View
 
-
+Our mobile interface is carefully crafted using v0 AI design principles, ensuring a seamless experience on smaller screens while maintaining all core functionalities.
 
 ## 📈 Model Details
 
@@ -164,6 +176,7 @@ For any queries or suggestions, please reach out to:
 
 ## 🙏 Acknowledgments
 
+- v0 AI Design System
 - Scikit-learn community
 - Flask framework
 - Tailwind CSS team
