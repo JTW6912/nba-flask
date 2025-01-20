@@ -1,128 +1,159 @@
 {% extends "base.html" %}
 
-{% block title %}Predict{% endblock %}
+{% block title %}Predictions{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-100 py-8">
-    <div class="container mx-auto px-4">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">NBA Game Prediction</h1>
-            <p class="text-gray-600">Select teams and get AI-powered predictions</p>
+<div class="container mx-auto px-4 py-8">
+    <!-- 标题和控件区域 -->
+    <div class="mb-6 space-y-4">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold">NBA Game Predictions</h1>
+            <div class="flex items-center space-x-2">
+                <span class="text-sm text-gray-600">Sort by date:</span>
+                <a href="{{ url_for('predict', sort='asc', page=page, date_filter=date_filter, start_date=start_date) }}" 
+                   class="px-3 py-1 text-sm rounded-lg {% if sort_order == 'asc' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                    Oldest First
+                </a>
+                <a href="{{ url_for('predict', sort='desc', page=page, date_filter=date_filter, start_date=start_date) }}" 
+                   class="px-3 py-1 text-sm rounded-lg {% if sort_order == 'desc' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                    Newest First
+                </a>
+            </div>
         </div>
-
-        <!-- Prediction Form -->
-        <div class="max-w-2xl mx-auto">
-            <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
-                <form method="POST" class="space-y-6">
-                    <!-- Team Selection -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="home_team" class="block text-sm font-medium text-gray-700 mb-2">Home Team</label>
-                            <select name="home_team" id="home_team" required
-                                class="form-select block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select Home Team</option>
-                                <option value="LAL">Los Angeles Lakers</option>
-                                <option value="GSW">Golden State Warriors</option>
-                                <!-- Add more teams -->
-                            </select>
-                        </div>
-                        <div>
-                            <label for="away_team" class="block text-sm font-medium text-gray-700 mb-2">Away Team</label>
-                            <select name="away_team" id="away_team" required
-                                class="form-select block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select Away Team</option>
-                                <option value="LAL">Los Angeles Lakers</option>
-                                <option value="GSW">Golden State Warriors</option>
-                                <!-- Add more teams -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="text-center">
-                        <button type="submit"
-                            class="btn-gradient px-8 py-3 rounded-lg text-lg font-semibold hover:shadow-lg transition-all">
-                            Get Prediction
-                        </button>
-                    </div>
-                </form>
+        
+        <!-- 日期筛选 -->
+        <div class="flex items-center space-x-4 bg-gray-50 p-3 rounded-lg">
+            <span class="text-sm text-gray-600">Filter by date:</span>
+            <div class="flex space-x-2">
+                <a href="{{ url_for('predict', date_filter='all', sort=sort_order) }}" 
+                   class="px-3 py-1 text-sm rounded-lg {% if date_filter == 'all' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                    All Games
+                </a>
+                <a href="{{ url_for('predict', date_filter='7d', sort=sort_order) }}" 
+                   class="px-3 py-1 text-sm rounded-lg {% if date_filter == '7d' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                    Next 7 Days
+                </a>
+                <a href="{{ url_for('predict', date_filter='30d', sort=sort_order) }}" 
+                   class="px-3 py-1 text-sm rounded-lg {% if date_filter == '30d' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                    Next 30 Days
+                </a>
+                <a href="{{ url_for('predict', date_filter='1y', sort=sort_order) }}" 
+                   class="px-3 py-1 text-sm rounded-lg {% if date_filter == '1y' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                    Next Year
+                </a>
             </div>
-
-            <!-- Prediction Result -->
-            {% if prediction %}
-            <div class="mt-8 bg-white rounded-lg shadow-lg p-6 hover-card">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Prediction Result</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <div class="text-center">
-                        <img src="{{ url_for('static', filename='img/teams/' + home_team + '.png') }}" 
-                             alt="{{ home_team }}" class="w-24 h-24 mx-auto mb-2">
-                        <p class="font-semibold">{{ home_team }}</p>
+            
+            <!-- 自定义日期选择 -->
+            <form class="flex items-center space-x-2" method="get" action="{{ url_for('predict') }}">
+                <input type="hidden" name="date_filter" value="custom">
+                <input type="hidden" name="sort" value="{{ sort_order }}">
+                <input type="date" name="start_date" value="{{ start_date }}" 
+                       class="px-3 py-1 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button type="submit" 
+                        class="px-3 py-1 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Apply
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 预测列表 -->
+    <div class="grid grid-cols-1 gap-4">
+        {% for prediction in predictions %}
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- 左侧：比赛信息 -->
+                <div>
+                    <div class="text-sm text-gray-600 mb-2">
+                        {{ prediction.game_info.date.strftime('%Y-%m-%d') }} | 
+                        {{ prediction.game_info.season }} ({{ prediction.game_info.season_type }})
                     </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold text-indigo-600 mb-2">VS</div>
-                        <div class="bg-green-100 text-green-800 text-sm font-semibold px-4 py-2 rounded-full">
-                            {{ prediction }}
+                    <div class="flex justify-between items-center">
+                        <div class="text-center flex-1">
+                            <div class="font-bold">{{ prediction.teams.home_team }}</div>
+                            {% if prediction.score.home_score is not none %}
+                            <div class="text-lg font-bold">{{ prediction.score.home_score }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="text-center px-2">
+                            <div class="text-sm font-bold">VS</div>
+                            <div class="text-xs mt-1">{{ prediction.score.status }}</div>
+                        </div>
+                        <div class="text-center flex-1">
+                            <div class="font-bold">{{ prediction.teams.away_team }}</div>
+                            {% if prediction.score.away_score is not none %}
+                            <div class="text-lg font-bold">{{ prediction.score.away_score }}</div>
+                            {% endif %}
                         </div>
                     </div>
-                    <div class="text-center">
-                        <img src="{{ url_for('static', filename='img/teams/' + away_team + '.png') }}" 
-                             alt="{{ away_team }}" class="w-24 h-24 mx-auto mb-2">
-                        <p class="font-semibold">{{ away_team }}</p>
+                    <div class="text-xs text-gray-600 mt-2">
+                        {{ prediction.venue.arena }}, {{ prediction.venue.city }}
                     </div>
                 </div>
-                <div class="mt-6">
-                    <h3 class="text-lg font-semibold mb-2">Prediction Details</h3>
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-sm text-gray-600">Win Probability</p>
-                                <p class="font-semibold">{{ win_probability }}%</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Confidence Score</p>
-                                <p class="font-semibold">{{ confidence_score }}%</p>
-                            </div>
-                        </div>
+
+                <!-- 中间：模型预测 -->
+                <div class="space-y-2">
+                    <div class="text-sm">
+                        <span class="font-semibold">Logistic Regression:</span><br>
+                        {% if prediction.score.home_score is none %}
+                            Predicted Winner: {{ prediction.model_predictions.logistic_regression.prediction.winner }} 
+                            ({{ "%.1f"|format(prediction.model_predictions.logistic_regression.prediction.probability) }}%)
+                        {% else %}
+                            Home: {{ "%.1f"|format(prediction.model_predictions.logistic_regression.home_win_prob * 100) }}% | 
+                            Away: {{ "%.1f"|format(prediction.model_predictions.logistic_regression.away_win_prob * 100) }}%
+                        {% endif %}
+                    </div>
+                    <div class="text-sm">
+                        <span class="font-semibold">Random Forest:</span><br>
+                        {% if prediction.score.home_score is none %}
+                            Predicted Winner: {{ prediction.model_predictions.random_forest.prediction.winner }}
+                            ({{ "%.1f"|format(prediction.model_predictions.random_forest.prediction.probability) }}%)
+                        {% else %}
+                            Home: {{ "%.1f"|format(prediction.model_predictions.random_forest.home_win_prob * 100) }}% | 
+                            Away: {{ "%.1f"|format(prediction.model_predictions.random_forest.away_win_prob * 100) }}%
+                        {% endif %}
                     </div>
                 </div>
+
+                <!-- 右侧：预测结果 -->
+                <div class="flex flex-col justify-center">
+                    <div class="text-sm">
+                        <span class="px-2 py-1 rounded-full text-xs {% if prediction.prediction_result.status == 'Completed' %}bg-blue-100 text-blue-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ prediction.prediction_result.status }}
+                        </span>
+                    </div>
+                    {% if prediction.prediction_result.correct is not none %}
+                    <div class="mt-2">
+                        <span class="px-2 py-1 rounded-full text-xs {% if prediction.prediction_result.correct %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ "Correct" if prediction.prediction_result.correct else "Incorrect" }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- 分页 -->
+    <div class="mt-6 flex justify-between items-center">
+        <div class="text-sm text-gray-600">
+            Showing {{ predictions|length }} of {{ total_records }} records
+        </div>
+        <div class="flex space-x-2">
+            {% if page > 1 %}
+            <a href="{{ url_for('predict', page=page-1, sort=sort_order, date_filter=date_filter, start_date=start_date) }}" 
+               class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Previous</a>
             {% endif %}
-        </div>
-
-        <!-- Recent Predictions -->
-        <div class="mt-12">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Recent Predictions</h2>
-            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead>
-                            <tr class="bg-gray-50">
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teams</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prediction</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            {% for prediction in recent_predictions %}
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ prediction.date }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ prediction.teams }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">{{ prediction.prediction }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                        {% if prediction.result == 'Correct' %}bg-green-100 text-green-800
-                                        {% else %}bg-red-100 text-red-800{% endif %}">
-                                        {{ prediction.result }}
-                                    </span>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            
+            <span class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg">
+                Page {{ page }} of {{ total_pages }}
+            </span>
+            
+            {% if page < total_pages %}
+            <a href="{{ url_for('predict', page=page+1, sort=sort_order, date_filter=date_filter, start_date=start_date) }}" 
+               class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Next</a>
+            {% endif %}
         </div>
     </div>
 </div>

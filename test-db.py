@@ -23,22 +23,50 @@ def test_database_connection():
             database=os.getenv('MYSQL_DATABASE'),
             user=os.getenv('MYSQLUSER'),
             password=os.getenv('MYSQLPASSWORD'),
-            port=os.getenv('MYSQLPORT')
+            port=int(os.getenv('MYSQLPORT'))
         )
         
         if connection.is_connected():
             db_info = connection.get_server_info()
             logger.info(f"成功连接到MySQL数据库。服务器版本: {db_info}")
             
-            # 创建游标并执行测试查询
             cursor = connection.cursor()
-            cursor.execute("SELECT DATABASE();")
-            database_name = cursor.fetchone()[0]
-            logger.info(f"当前数据库名称: {database_name}")
+            
+            # 查看 game_predictions_results 表
+            logger.info("\n查看 game_predictions_results 表:")
+            try:
+                cursor.execute("SELECT * FROM game_predictions_results LIMIT 5")
+                results = cursor.fetchall()
+                if results:
+                    # 获取列名
+                    column_names = [i[0] for i in cursor.description]
+                    logger.info(f"列名: {column_names}")
+                    for row in results:
+                        logger.info(row)
+                else:
+                    logger.info("game_predictions_results 表为空")
+            except Error as e:
+                logger.error(f"查询 game_predictions_results 表时出错: {e}")
+            
+            # 查看 teams 表
+            logger.info("\n查看 teams 表:")
+            try:
+                cursor.execute("SELECT * FROM teams LIMIT 5")
+                results = cursor.fetchall()
+                if results:
+                    # 获取列名
+                    column_names = [i[0] for i in cursor.description]
+                    logger.info(f"列名: {column_names}")
+                    for row in results:
+                        logger.info(row)
+                else:
+                    logger.info("teams 表为空")
+            except Error as e:
+                logger.error(f"查询 teams 表时出错: {e}")
             
             cursor.close()
             connection.close()
-            logger.info("数据库连接已关闭")
+            logger.info("\n数据库连接已关闭")
             return True
 
     except Error as e:
