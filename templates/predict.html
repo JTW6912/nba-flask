@@ -131,11 +131,7 @@
 
                         <div class="mt-2 text-sm">
                             <span class="font-semibold">Predicted Winner:</span><br>
-                            <div class="mt-1">
-                                <span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                                    LR: {{ prediction.model_predictions.logistic_regression.prediction.winner }}
-                                </span>
-                            </div>
+
                             <div class="mt-1">
                                 <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
                                     RF: {{ prediction.model_predictions.random_forest.prediction.winner }}
@@ -144,11 +140,7 @@
                         </div>
                     {% else %}
                         <!-- 已完成的比赛显示实际结果 -->
-                        <div class="text-sm">
-                            <span class="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
-                                {{ prediction.score.status }}
-                            </span>
-                        </div>
+
                         {% if prediction.prediction_result.correct is not none %}
                         <div class="mt-2">
                             <span class="px-2 py-1 rounded-full text-xs {% if prediction.prediction_result.correct %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">

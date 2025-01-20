@@ -61,7 +61,21 @@ except Exception as e:
     print(f"Failed to configure database: {str(e)}")
     raise
 
-def get_db():
+def get_db_connection():
+    try:
+        connection = mysql.connector.connect(
+            host=os.environ.get('MYSQLHOST'),
+            user=os.environ.get('MYSQLUSER', 'root'),
+            password=os.environ.get('MYSQLPASSWORD'),
+            database=os.environ.get('MYSQL_DATABASE'),
+            port=int(os.environ.get('MYSQLPORT', '3306'))
+        )
+        return connection
+    except Error as e:
+        app.logger.error(f"Error connecting to MySQL: {e}")
+        raise
+
+def check_db_connection():
     max_retries = 3
     retry_count = 0
     
@@ -71,22 +85,23 @@ def get_db():
             return True
         except Exception as e:
             retry_count += 1
-            print(f"Database connection attempt {retry_count} failed: {str(e)}")
+            app.logger.error(f"Database connection attempt {retry_count} failed: {str(e)}")
             if retry_count == max_retries:
-                print("Max retries reached, database connection failed")
+                app.logger.error("Max retries reached, database connection failed")
                 return False
             db.session.remove()
             time.sleep(1)  # 等待1秒后重试
+    return False
 
 @app.before_request
 def before_request():
-    if not get_db():
+    if not check_db_connection():
         return jsonify({"error": "Database connection failed"}), 503
 
 @app.teardown_request
 def teardown_request(exception=None):
     if exception:
-        print(f"Request error: {str(exception)}")
+        app.logger.error(f"Request error: {str(exception)}")
         db.session.rollback()
     db.session.remove()
 
@@ -194,32 +209,58 @@ class RegistrationForm(FlaskForm):
 @login_required
 def dashboard():
     try:
-        recent_predictions = [
-            {
-                'date': '2024-03-15',
-                'teams': 'Lakers vs Warriors',
-                'prediction': 'Lakers Win',
-                'result': 'Correct'
-            },
-            {
-                'date': '2024-03-14',
-                'teams': 'Celtics vs Bucks',
-                'prediction': 'Celtics Win',
-                'result': 'Incorrect'
-            },
-            {
-                'date': '2024-03-13',
-                'teams': 'Heat vs Nets',
-                'prediction': 'Heat Win',
-                'result': 'Correct'
-            }
-        ]
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
         
-        print(f"User {current_user.username} accessed dashboard")
-        return render_template('dashboard.html', recent_predictions=recent_predictions)
+        # 获取仪表盘统计数据
+        cursor.execute("SELECT * FROM dashboard_stats ORDER BY id DESC LIMIT 1")
+        stats = cursor.fetchone()
+        
+        if not stats:
+            # 如果没有统计数据，创建初始数据
+            cursor.execute("""
+                INSERT INTO dashboard_stats 
+                (total_predictions, correct_predictions, accuracy_rate, last_update, page_views)
+                VALUES (0, 0, 0.0, NOW(), 0)
+            """)
+            conn.commit()
+            cursor.execute("SELECT * FROM dashboard_stats ORDER BY id DESC LIMIT 1")
+            stats = cursor.fetchone()
+        
+        # 获取即将到来的比赛
+        cursor.execute("""
+            SELECT * FROM upcoming_games 
+            ORDER BY game_date ASC 
+            LIMIT 5
+        """)
+        upcoming_games = cursor.fetchall()
+        
+        # 更新页面浏览量
+        cursor.execute("""
+            UPDATE dashboard_stats 
+            SET page_views = page_views + 1,
+                last_update = NOW()
+            WHERE id = %s
+        """, (stats['id'],))
+        stats['page_views'] += 1
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return render_template('dashboard.html', 
+                             stats=stats, 
+                             upcoming_games=upcoming_games)
+                             
     except Exception as e:
-        print(f"Error in dashboard route: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error in dashboard route: {str(e)}")
+        app.logger.error(traceback.format_exc())  # 添加详细的错误跟踪
+        if 'cursor' in locals():
+            cursor.close()
+        if 'conn' in locals():
+            conn.close()
+        flash("An error occurred while loading the dashboard", "error")
+        return redirect(url_for('index'))
 
 @app.route('/logout')
 @login_required
@@ -238,11 +279,11 @@ def predict():
     try:
         # Get pagination and sorting parameters
         page = request.args.get('page', 1, type=int)
-        sort_order = request.args.get('sort', 'asc')  # 'asc' or 'desc'
-        date_filter = request.args.get('date_filter', 'all')  # all, 7d, 30d, 1y, custom
-        start_date = request.args.get('start_date')  # YYYY-MM-DD format for custom date
+        sort_order = request.args.get('sort', 'asc')
+        date_filter = request.args.get('date_filter', 'all')
+        start_date = request.args.get('start_date')
         
-        per_page = 10  # Number of predictions per page
+        per_page = 10
         offset = (page - 1) * per_page
 
         # Build date filter condition
@@ -268,19 +309,17 @@ def predict():
                 app.logger.error(f"Invalid date format: {start_date}")
                 return render_template('error.html', error="Invalid date format. Please use YYYY-MM-DD")
 
-        # Get total count of records
-        with get_db_connection() as conn:
-            cursor = conn.cursor(dictionary=True)
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        try:
+            # Get total count
             count_query = f'SELECT COUNT(*) as count FROM game_predictions_results WHERE 1=1 {date_condition}'
             cursor.execute(count_query, query_params)
             total_records = cursor.fetchone()['count']
+            total_pages = (total_records + per_page - 1) // per_page
 
-        # Calculate total pages
-        total_pages = (total_records + per_page - 1) // per_page
-
-        # Get predictions for current page
-        with get_db_connection() as conn:
-            cursor = conn.cursor(dictionary=True)
+            # Get predictions
             query = '''
                 SELECT 
                     gpr.id,
@@ -304,80 +343,86 @@ def predict():
                 WHERE 1=1 {0}
                 ORDER BY gpr.game_date {1}, gpr.id {1}
                 LIMIT %s OFFSET %s
-            '''.format(date_condition,
-                      'ASC' if sort_order == 'asc' else 'DESC')
+            '''.format(date_condition, 'ASC' if sort_order == 'asc' else 'DESC')
             
-            # Combine all query parameters
             all_params = query_params + [per_page, offset]
             cursor.execute(query, all_params)
             predictions_data = cursor.fetchall()
 
-        # Format predictions for template
-        predictions = []
-        for pred in predictions_data:
-            # Determine predicted winner based on highest probability
-            lr_home_prob = float(pred['home_win_probability_logistic'])
-            rf_home_prob = float(pred['home_win_probability_rf'])
-            
-            lr_prediction = {
-                'winner': pred['home_team'] if lr_home_prob > 0.5 else pred['away_team'],
-                'probability': max(lr_home_prob, 1 - lr_home_prob) * 100
-            }
-            
-            rf_prediction = {
-                'winner': pred['home_team'] if rf_home_prob > 0.5 else pred['away_team'],
-                'probability': max(rf_home_prob, 1 - rf_home_prob) * 100
-            }
-
-            prediction = {
-                'game_info': {
-                    'date': pred['game_date'],
-                    'season': pred['season'],
-                    'season_type': pred['season_type']
-                },
-                'teams': {
-                    'home_team': pred['home_team'],
-                    'away_team': pred['away_team']
-                },
-                'score': {
-                    'home_score': pred['home_team_score'],
-                    'away_score': pred['away_team_score'],
-                    'status': pred['game_status_text']
-                },
-                'venue': {
-                    'arena': pred['arena_name'],
-                    'city': pred['arena_city']
-                },
-                'model_predictions': {
-                    'logistic_regression': {
-                        'home_win_prob': lr_home_prob,
-                        'away_win_prob': 1 - lr_home_prob,
-                        'prediction': lr_prediction
-                    },
-                    'random_forest': {
-                        'home_win_prob': rf_home_prob,
-                        'away_win_prob': 1 - rf_home_prob,
-                        'prediction': rf_prediction
-                    }
-                },
-                'prediction_result': {
-                    'status': pred['game_status_text'],
-                    'correct': bool(pred['prediction_correct']) if pred['game_status'] == 3 else None
+            # Format predictions
+            predictions = []
+            for pred in predictions_data:
+                lr_home_prob = float(pred['home_win_probability_logistic'])
+                rf_home_prob = float(pred['home_win_probability_rf'])
+                
+                lr_prediction = {
+                    'winner': pred['home_team'] if lr_home_prob > 0.5 else pred['away_team'],
+                    'probability': max(lr_home_prob, 1 - lr_home_prob) * 100
                 }
-            }
-            predictions.append(prediction)
+                
+                rf_prediction = {
+                    'winner': pred['home_team'] if rf_home_prob > 0.5 else pred['away_team'],
+                    'probability': max(rf_home_prob, 1 - rf_home_prob) * 100
+                }
 
-        return render_template('predict.html', 
-                             predictions=predictions,
-                             page=page,
-                             total_pages=total_pages,
-                             total_records=total_records,
-                             sort_order=sort_order,
-                             date_filter=date_filter,
-                             start_date=start_date)
+                prediction = {
+                    'game_info': {
+                        'date': pred['game_date'],
+                        'season': pred['season'],
+                        'season_type': pred['season_type']
+                    },
+                    'teams': {
+                        'home_team': pred['home_team'],
+                        'away_team': pred['away_team']
+                    },
+                    'score': {
+                        'home_score': pred['home_team_score'],
+                        'away_score': pred['away_team_score'],
+                        'status': pred['game_status_text']
+                    },
+                    'venue': {
+                        'arena': pred['arena_name'],
+                        'city': pred['arena_city']
+                    },
+                    'model_predictions': {
+                        'logistic_regression': {
+                            'home_win_prob': lr_home_prob,
+                            'away_win_prob': 1 - lr_home_prob,
+                            'prediction': lr_prediction
+                        },
+                        'random_forest': {
+                            'home_win_prob': rf_home_prob,
+                            'away_win_prob': 1 - rf_home_prob,
+                            'prediction': rf_prediction
+                        }
+                    },
+                    'prediction_result': {
+                        'status': pred['game_status_text'],
+                        'correct': bool(pred['prediction_correct']) if pred['game_status'] == 3 else None
+                    }
+                }
+                predictions.append(prediction)
+
+            cursor.close()
+            conn.close()
+
+            return render_template('predict.html',
+                                predictions=predictions,
+                                page=page,
+                                total_pages=total_pages,
+                                total_records=total_records,
+                                sort_order=sort_order,
+                                date_filter=date_filter,
+                                start_date=start_date)
+
+        except Exception as e:
+            cursor.close()
+            conn.close()
+            raise e
 
     except Exception as e:
         app.logger.error(f"Error in predict route: {str(e)}")
+        app.logger.error(traceback.format_exc())
         return render_template('error.html', error="An error occurred while loading predictions")
 
 @app.route('/models')
@@ -389,20 +434,6 @@ def models():
     except Exception as e:
         print(f"Error in models route: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-def get_db_connection():
-    try:
-        connection = mysql.connector.connect(
-            host=os.environ.get('MYSQLHOST'),
-            user=os.environ.get('MYSQLUSER', 'root'),
-            password=os.environ.get('MYSQLPASSWORD'),
-            database=os.environ.get('MYSQL_DATABASE'),
-            port=int(os.environ.get('MYSQLPORT', '3306'))
-        )
-        return connection
-    except Error as e:
-        app.logger.error(f"Error connecting to MySQL: {e}")
-        raise
 
 # 初始化数据库
 init_db()

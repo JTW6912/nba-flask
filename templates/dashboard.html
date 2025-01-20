@@ -2,146 +2,196 @@
 
 {% block title %}Dashboard{% endblock %}
 
+{% block extra_css %}
+<style>
+.progress-bar {
+    transition: width 0.6s ease;
+}
+.nav-card {
+    transition: all 0.3s ease;
+}
+.nav-card:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="min-h-screen bg-gray-100">
-    <!-- Header Section -->
-    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-8">
-        <div class="container mx-auto px-4">
-            <h1 class="text-3xl font-bold mb-2">Welcome, {{ current_user.username }}!</h1>
-            <p class="text-gray-100">Your NBA Prediction Dashboard</p>
-        </div>
-    </div>
-
-    <!-- Stats Overview -->
-    <div class="container mx-auto px-4 -mt-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm">Total Predictions</p>
-                        <h3 class="text-2xl font-bold">156</h3>
-                    </div>
-                    <div class="text-blue-500 text-3xl">📊</div>
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Welcome Section -->
+        <div class="mb-10 bg-white rounded-2xl p-8 shadow-sm hover:shadow-md transition-all">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Welcome back, {{ current_user.username }}! 👋</h1>
+                    <p class="mt-2 text-gray-600">Here's your prediction dashboard overview</p>
                 </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm">Accuracy Rate</p>
-                        <h3 class="text-2xl font-bold">72.4%</h3>
-                    </div>
-                    <div class="text-green-500 text-3xl">📈</div>
-                </div>
-            </div>
-            <div class="bg-white rounded-lg shadow-lg p-6 hover-card">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-gray-500 text-sm">Recent Success</p>
-                        <h3 class="text-2xl font-bold">8/10</h3>
-                    </div>
-                    <div class="text-purple-500 text-3xl">🎯</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="container mx-auto px-4 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Recent Predictions -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-bold mb-4">Recent Predictions</h2>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full">
-                        <thead>
-                            <tr class="bg-gray-50">
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teams</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prediction</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Result</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-03-15</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">Lakers vs Warriors</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">Lakers Win</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Correct
-                                    </span>
-                                </td>
-                            </tr>
-                            <!-- Add more rows as needed -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Performance Chart -->
-            <div class="bg-white rounded-lg shadow-lg p-6">
-                <h2 class="text-xl font-bold mb-4">Prediction Accuracy Trend</h2>
-                <div class="h-64 chart-container">
-                    <!-- Chart will be rendered here -->
-                    <canvas id="accuracyChart"></canvas>
+                <div class="text-right">
+                    <p class="text-sm text-gray-500">Last updated</p>
+                    <p class="text-lg font-medium text-gray-900">{{ stats.last_update.strftime('%Y-%m-%d %H:%M') }}</p>
                 </div>
             </div>
         </div>
 
-        <!-- Quick Actions -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
-            <a href="{{ url_for('predict') }}" class="bg-white rounded-lg shadow-lg p-6 hover-card cursor-pointer">
-                <div class="text-3xl mb-2">🎮</div>
-                <h3 class="text-lg font-semibold mb-1">New Prediction</h3>
-                <p class="text-gray-500 text-sm">Make a new game prediction</p>
+        <!-- Navigation Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+            <!-- Models Card -->
+            <a href="{{ url_for('models') }}" class="nav-card block">
+                <div class="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl p-6 text-white shadow-sm hover:shadow-md">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold">Model Information</h3>
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <i class="fas fa-brain text-2xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-white/80 mb-4">Learn about our prediction models and their performance</p>
+                    <div class="flex items-center text-sm">
+                        <span>View Details</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
             </a>
-            <a href="{{ url_for('models') }}" class="bg-white rounded-lg shadow-lg p-6 hover-card cursor-pointer">
-                <div class="text-3xl mb-2">🤖</div>
-                <h3 class="text-lg font-semibold mb-1">Model Analysis</h3>
-                <p class="text-gray-500 text-sm">View model performance</p>
+
+            <!-- Predictions Card -->
+            <a href="{{ url_for('predict') }}" class="nav-card block">
+                <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl p-6 text-white shadow-sm hover:shadow-md">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-semibold">Prediction Data</h3>
+                        <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                            <i class="fas fa-chart-line text-2xl"></i>
+                        </div>
+                    </div>
+                    <p class="text-white/80 mb-4">View all predictions and their outcomes</p>
+                    <div class="flex items-center text-sm">
+                        <span>View Predictions</span>
+                        <i class="fas fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
             </a>
-            <div class="bg-white rounded-lg shadow-lg p-6 hover-card cursor-pointer">
-                <div class="text-3xl mb-2">📝</div>
-                <h3 class="text-lg font-semibold mb-1">History</h3>
-                <p class="text-gray-500 text-sm">View prediction history</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <!-- Total Predictions -->
+            <div class="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-sm p-6 hover:shadow-md transition-all text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Total Predictions</h3>
+                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <i class="fas fa-chart-bar text-2xl"></i>
+                    </div>
+                </div>
+                <p class="text-4xl font-bold mb-2">{{ stats.total_predictions }}</p>
+                <p class="text-sm text-white/80">Games predicted so far</p>
             </div>
-            <div class="bg-white rounded-lg shadow-lg p-6 hover-card cursor-pointer">
-                <div class="text-3xl mb-2">⚙️</div>
-                <h3 class="text-lg font-semibold mb-1">Settings</h3>
-                <p class="text-gray-500 text-sm">Customize your dashboard</p>
+
+            <!-- Accuracy Rate -->
+            <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl shadow-sm p-6 hover:shadow-md transition-all text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Accuracy Rate</h3>
+                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <i class="fas fa-bullseye text-2xl"></i>
+                    </div>
+                </div>
+                <p class="text-4xl font-bold mb-2">{{ "%.1f"|format(stats.accuracy_rate) }}%</p>
+                <p class="text-sm text-white/80">{{ stats.correct_predictions }} correct predictions</p>
+            </div>
+
+            <!-- Page Views -->
+            <div class="bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl shadow-sm p-6 hover:shadow-md transition-all text-white">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold">Page Views</h3>
+                    <div class="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <i class="fas fa-eye text-2xl"></i>
+                    </div>
+                </div>
+                <p class="text-4xl font-bold mb-2">{{ stats.page_views }}</p>
+                <p class="text-sm text-white/80">Total dashboard visits</p>
+            </div>
+        </div>
+
+        <!-- Upcoming Games Section -->
+        <div class="bg-white rounded-2xl shadow-sm p-8 hover:shadow-md transition-all">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Upcoming Games</h2>
+                    <p class="text-sm text-gray-500 mt-1">Next 5 games predictions</p>
+                </div>
+                <span class="px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
+                    <i class="fas fa-calendar-alt mr-2"></i>Upcoming
+                </span>
+            </div>
+            
+            <div class="space-y-8">
+                {% for game in upcoming_games %}
+                <div class="border-b border-gray-100 pb-8 last:border-b-0 last:pb-0">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-8">
+                            <div class="text-right">
+                                <p class="text-lg font-bold text-gray-900">{{ game.home_team_name }}</p>
+                                <p class="text-sm text-indigo-600 font-medium">Home Team</p>
+                            </div>
+                            <div class="w-12 h-12 bg-gray-900 rounded-full flex items-center justify-center">
+                                <span class="text-xl font-bold text-white">VS</span>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-lg font-bold text-gray-900">{{ game.away_team_name }}</p>
+                                <p class="text-sm text-indigo-600 font-medium">Away Team</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-gray-500">Game Date</p>
+                            <p class="text-lg font-bold text-gray-900">{{ game.game_date.strftime('%Y-%m-%d') }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-4">
+                                <i class="fas fa-brain text-indigo-600 mr-2"></i>Logistic Regression
+                            </h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-600">{{ game.home_team_name }}</span>
+                                    <span class="text-sm font-bold text-gray-900">{{ "%.1f"|format(game.home_win_probability_logistic * 100) }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div class="progress-bar bg-indigo-600 h-2 rounded-full" style="width: {{ game.home_win_probability_logistic * 100 }}%"></div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-600">{{ game.away_team_name }}</span>
+                                    <span class="text-sm font-bold text-gray-900">{{ "%.1f"|format(game.away_win_probability_logistic * 100) }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div class="progress-bar bg-indigo-600 h-2 rounded-full" style="width: {{ game.away_win_probability_logistic * 100 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6">
+                            <h4 class="text-sm font-semibold text-gray-900 mb-4">
+                                <i class="fas fa-tree text-green-600 mr-2"></i>Random Forest
+                            </h4>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-600">{{ game.home_team_name }}</span>
+                                    <span class="text-sm font-bold text-gray-900">{{ "%.1f"|format(game.home_win_probability_rf * 100) }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div class="progress-bar bg-green-600 h-2 rounded-full" style="width: {{ game.home_win_probability_rf * 100 }}%"></div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-medium text-gray-600">{{ game.away_team_name }}</span>
+                                    <span class="text-sm font-bold text-gray-900">{{ "%.1f"|format(game.away_win_probability_rf * 100) }}%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div class="progress-bar bg-green-600 h-2 rounded-full" style="width: {{ game.away_win_probability_rf * 100 }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
 </div>
-
-<!-- Chart.js Script -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var ctx = document.getElementById('accuracyChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            datasets: [{
-                label: 'Accuracy %',
-                data: [65, 70, 68, 72, 75, 72],
-                borderColor: 'rgb(59, 130, 246)',
-                tension: 0.4,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100
-                }
-            }
-        }
-    });
-});
-</script>
 {% endblock %} 
