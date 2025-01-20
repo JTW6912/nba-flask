@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -10,10 +10,14 @@ from wtforms.validators import DataRequired, Length, EqualTo
 from sqlalchemy import text
 import traceback
 import time
+import mysql.connector
+from mysql.connector import Error
+import logging
+from datetime import datetime, timedelta
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='../static', template_folder='../templates')
+app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'your-secret-key')
 
 # 数据库配置部分
@@ -229,51 +233,152 @@ def logout():
         print(f"Error in logout route: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/predict', methods=['GET', 'POST'])
-@login_required
+@app.route('/predict')
 def predict():
     try:
-        recent_predictions = [
-            {
-                'date': '2024-03-15',
-                'teams': 'Lakers vs Warriors',
-                'prediction': 'Lakers Win',
-                'result': 'Correct'
-            },
-            {
-                'date': '2024-03-14',
-                'teams': 'Celtics vs Bucks',
-                'prediction': 'Celtics Win',
-                'result': 'Incorrect'
-            },
-            {
-                'date': '2024-03-13',
-                'teams': 'Heat vs Nets',
-                'prediction': 'Heat Win',
-                'result': 'Correct'
-            }
-        ]
-
-        if request.method == 'POST':
-            home_team = request.form.get('home_team')
-            away_team = request.form.get('away_team')
-            prediction = "Home Team Win"
-            win_probability = 75.5
-            confidence_score = 80.0
-            
-            print(f"Prediction made for {home_team} vs {away_team}")
-            return render_template('predict.html', 
-                                prediction=prediction,
-                                home_team=home_team,
-                                away_team=away_team,
-                                win_probability=win_probability,
-                                confidence_score=confidence_score,
-                                recent_predictions=recent_predictions)
+        # Get pagination and sorting parameters
+        page = request.args.get('page', 1, type=int)
+        sort_order = request.args.get('sort', 'asc')  # 'asc' or 'desc'
+        date_filter = request.args.get('date_filter', 'all')  # all, 7d, 30d, 1y, custom
+        start_date = request.args.get('start_date')  # YYYY-MM-DD format for custom date
         
-        return render_template('predict.html', recent_predictions=recent_predictions)
+        per_page = 10  # Number of predictions per page
+        offset = (page - 1) * per_page
+
+        # Build date filter condition
+        date_condition = ""
+        query_params = []
+        today = datetime.now().date()
+        
+        if date_filter == '7d':
+            date_condition = "AND game_date BETWEEN %s AND %s"
+            query_params = [today, today + timedelta(days=7)]
+        elif date_filter == '30d':
+            date_condition = "AND game_date BETWEEN %s AND %s"
+            query_params = [today, today + timedelta(days=30)]
+        elif date_filter == '1y':
+            date_condition = "AND game_date BETWEEN %s AND %s"
+            query_params = [today, today + timedelta(days=365)]
+        elif date_filter == 'custom' and start_date:
+            try:
+                custom_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                date_condition = "AND game_date = %s"
+                query_params = [custom_date]
+            except ValueError:
+                app.logger.error(f"Invalid date format: {start_date}")
+                return render_template('error.html', error="Invalid date format. Please use YYYY-MM-DD")
+
+        # Get total count of records
+        with get_db_connection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            count_query = f'SELECT COUNT(*) as count FROM game_predictions_results WHERE 1=1 {date_condition}'
+            cursor.execute(count_query, query_params)
+            total_records = cursor.fetchone()['count']
+
+        # Calculate total pages
+        total_pages = (total_records + per_page - 1) // per_page
+
+        # Get predictions for current page
+        with get_db_connection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            query = '''
+                SELECT 
+                    gpr.id,
+                    gpr.game_date,
+                    gpr.season,
+                    gpr.season_type,
+                    gpr.game_status,
+                    gpr.game_status_text,
+                    gpr.home_team_score,
+                    gpr.away_team_score,
+                    gpr.home_win_probability_logistic,
+                    gpr.home_win_probability_rf,
+                    gpr.prediction_correct,
+                    gpr.arena_name,
+                    gpr.arena_city,
+                    ht.team_name as home_team,
+                    at.team_name as away_team
+                FROM game_predictions_results gpr
+                JOIN teams ht ON gpr.home_team_id = ht.team_id
+                JOIN teams at ON gpr.away_team_id = at.team_id
+                WHERE 1=1 {0}
+                ORDER BY gpr.game_date {1}, gpr.id {1}
+                LIMIT %s OFFSET %s
+            '''.format(date_condition,
+                      'ASC' if sort_order == 'asc' else 'DESC')
+            
+            # Combine all query parameters
+            all_params = query_params + [per_page, offset]
+            cursor.execute(query, all_params)
+            predictions_data = cursor.fetchall()
+
+        # Format predictions for template
+        predictions = []
+        for pred in predictions_data:
+            # Determine predicted winner based on highest probability
+            lr_home_prob = float(pred['home_win_probability_logistic'])
+            rf_home_prob = float(pred['home_win_probability_rf'])
+            
+            lr_prediction = {
+                'winner': pred['home_team'] if lr_home_prob > 0.5 else pred['away_team'],
+                'probability': max(lr_home_prob, 1 - lr_home_prob) * 100
+            }
+            
+            rf_prediction = {
+                'winner': pred['home_team'] if rf_home_prob > 0.5 else pred['away_team'],
+                'probability': max(rf_home_prob, 1 - rf_home_prob) * 100
+            }
+
+            prediction = {
+                'game_info': {
+                    'date': pred['game_date'],
+                    'season': pred['season'],
+                    'season_type': pred['season_type']
+                },
+                'teams': {
+                    'home_team': pred['home_team'],
+                    'away_team': pred['away_team']
+                },
+                'score': {
+                    'home_score': pred['home_team_score'],
+                    'away_score': pred['away_team_score'],
+                    'status': pred['game_status_text']
+                },
+                'venue': {
+                    'arena': pred['arena_name'],
+                    'city': pred['arena_city']
+                },
+                'model_predictions': {
+                    'logistic_regression': {
+                        'home_win_prob': lr_home_prob,
+                        'away_win_prob': 1 - lr_home_prob,
+                        'prediction': lr_prediction
+                    },
+                    'random_forest': {
+                        'home_win_prob': rf_home_prob,
+                        'away_win_prob': 1 - rf_home_prob,
+                        'prediction': rf_prediction
+                    }
+                },
+                'prediction_result': {
+                    'status': pred['game_status_text'],
+                    'correct': bool(pred['prediction_correct']) if pred['game_status'] == 3 else None
+                }
+            }
+            predictions.append(prediction)
+
+        return render_template('predict.html', 
+                             predictions=predictions,
+                             page=page,
+                             total_pages=total_pages,
+                             total_records=total_records,
+                             sort_order=sort_order,
+                             date_filter=date_filter,
+                             start_date=start_date)
+
     except Exception as e:
-        print(f"Error in predict route: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error in predict route: {str(e)}")
+        return render_template('error.html', error="An error occurred while loading predictions")
 
 @app.route('/models')
 @login_required
@@ -284,6 +389,20 @@ def models():
     except Exception as e:
         print(f"Error in models route: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+def get_db_connection():
+    try:
+        connection = mysql.connector.connect(
+            host=os.environ.get('MYSQLHOST'),
+            user=os.environ.get('MYSQLUSER', 'root'),
+            password=os.environ.get('MYSQLPASSWORD'),
+            database=os.environ.get('MYSQL_DATABASE'),
+            port=int(os.environ.get('MYSQLPORT', '3306'))
+        )
+        return connection
+    except Error as e:
+        app.logger.error(f"Error connecting to MySQL: {e}")
+        raise
 
 # 初始化数据库
 init_db()
