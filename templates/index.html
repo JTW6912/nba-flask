@@ -3,53 +3,86 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
+<div class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
     <!-- Hero Section -->
-    <div class="container mx-auto px-4 py-20">
-        <div class="text-center">
-            <h1 class="text-5xl font-bold mb-6 fade-in">NBA Game Prediction</h1>
-            <p class="text-xl mb-8 text-gray-300 fade-in">Predict NBA game outcomes with advanced machine learning models</p>
+    <div class="container mx-auto px-4 py-24">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="inline-flex items-center px-4 py-2 bg-indigo-50 rounded-full text-indigo-700 text-sm font-medium mb-8 fade-in">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Powered by Machine Learning
+            </div>
+            <h1 class="text-6xl font-bold mb-8 text-gray-900 tracking-tight fade-in">
+                NBA Game <span class="text-indigo-600">Prediction</span>
+            </h1>
+            <p class="text-xl mb-12 text-gray-600 leading-relaxed fade-in">
+                Make informed decisions with our advanced machine learning models for NBA game predictions. This open-source project combines cutting-edge ML technology with real-time NBA data.
+            </p>
             {% if not current_user.is_authenticated %}
-            <div class="space-x-4">
-                <a href="{{ url_for('login') }}" 
-                   class="btn-gradient px-8 py-3 rounded-lg text-lg font-semibold hover:shadow-lg transition-all">
-                    Get Started
-                </a>
-                <a href="{{ url_for('register') }}" 
-                   class="bg-transparent border-2 border-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-white hover:text-gray-900 transition-all">
-                    Sign Up
+            <div class="flex flex-col items-center space-y-6">
+                <div class="flex items-center space-x-4">
+                    <a href="{{ url_for('login') }}" 
+                       class="inline-flex items-center px-8 py-3 rounded-xl text-lg font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md">
+                        Get Started
+                        <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                    </a>
+
+                </div>
+                <a href="https://github.com/yourusername/nba-predictor" 
+                   class="inline-flex items-center px-6 py-2.5 rounded-lg font-medium bg-gray-900 text-white hover:bg-gray-800 transition-all shadow-sm hover:shadow-md">
+                    <i class="fab fa-github mr-2 text-lg"></i>
+                    View on GitHub
                 </a>
             </div>
             {% else %}
-            <a href="{{ url_for('dashboard') }}" 
-               class="btn-gradient px-8 py-3 rounded-lg text-lg font-semibold hover:shadow-lg transition-all">
-                Go to Dashboard
-            </a>
+            <div class="flex flex-col items-center space-y-6">
+                <a href="{{ url_for('dashboard') }}" 
+                   class="inline-flex items-center px-8 py-3 rounded-xl text-lg font-semibold bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm hover:shadow-md">
+                    Go to Dashboard
+                    <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                </a>
+                <a href="https://github.com/yourusername/nba-predictor" 
+                   class="inline-flex items-center px-6 py-2.5 rounded-lg font-medium bg-gray-900 text-white hover:bg-gray-800 transition-all shadow-sm hover:shadow-md">
+                    <i class="fab fa-github mr-2 text-lg"></i>
+                    View on GitHub
+                </a>
+            </div>
             {% endif %}
         </div>
     </div>
 
     <!-- Features Section -->
-    <div class="container mx-auto px-4 py-16">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-gray-800 p-6 rounded-lg hover-card">
-                <div class="text-4xl mb-4">🏀</div>
-                <h3 class="text-xl font-bold mb-2">Advanced Analytics</h3>
-                <p class="text-gray-400">Utilize cutting-edge machine learning models for accurate game predictions</p>
-            </div>
-            <div class="bg-gray-800 p-6 rounded-lg hover-card">
-                <div class="text-4xl mb-4">📊</div>
-                <h3 class="text-xl font-bold mb-2">Real-time Data</h3>
-                <p class="text-gray-400">Access up-to-date statistics and performance metrics for all NBA teams</p>
-            </div>
-            <div class="bg-gray-800 p-6 rounded-lg hover-card">
-                <div class="text-4xl mb-4">📈</div>
-                <h3 class="text-xl font-bold mb-2">Performance Tracking</h3>
-                <p class="text-gray-400">Track your prediction accuracy and improve over time</p>
+    <div class="container mx-auto px-4 pb-24">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                    <div class="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-chart-line text-2xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-900">Advanced Analytics</h3>
+                    <p class="text-gray-600 leading-relaxed">Utilize cutting-edge machine learning models for accurate game predictions</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                    <div class="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-database text-2xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-900">Real-time Data</h3>
+                    <p class="text-gray-600 leading-relaxed">Access up-to-date statistics and performance metrics for all NBA teams</p>
+                </div>
+                <div class="bg-white p-8 rounded-2xl shadow-sm hover:shadow-md transition-all">
+                    <div class="w-14 h-14 bg-indigo-50 rounded-xl flex items-center justify-center mb-6">
+                        <i class="fas fa-chart-bar text-2xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3 text-gray-900">Performance Tracking</h3>
+                    <p class="text-gray-600 leading-relaxed">Track your prediction accuracy and improve over time</p>
+                </div>
             </div>
         </div>
     </div>
-
-    
 </div>
 {% endblock %} 
