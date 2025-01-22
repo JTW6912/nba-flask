@@ -2,7 +2,7 @@
 
 A machine learning-powered web application for predicting NBA game outcomes with high accuracy.
 
-![image-20250120144429114](./assets/image-20250120144429114.png)![image-20250120144453268](./assets/image-20250120144453268.png)
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120144429114.png)![image-20250120144453268](./assets/image-20250120144453268.png)
 
 ## 🌟 Features
 
@@ -17,25 +17,25 @@ A machine learning-powered web application for predicting NBA game outcomes with
 
 ### accuracy
 
-![image-20250120144539093](./assets/image-20250120144539093.png)
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120144539093.png)
 
 ### Performance comparsion
 
-<img src="./assets/image-20250120144549889.png" alt="image-20250120144549889" style="zoom:50%;" />
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120144549889.png)
 
 ## 🚀 Live Demo
 
 Experience the platform live at: https://nba-smart.vercel.app/
 
-![image-20250120144856606](./assets/image-20250120144856606.png)
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120144856606.png)
 
 ### result display
 
-![image-20250120145331503](./assets/image-20250120145331503.png)
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120145331503.png)
 
 ### game which is finished
 
-![image-20250120145359943](./assets/image-20250120145359943.png)
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120145359943.png)
 
 ## 🎨 UI Design
 
@@ -115,15 +115,15 @@ Our mobile interface is carefully crafted using v0 AI design principles, ensurin
 
 ### Matrix Analysis
 
-![image-20250120144641469](./assets/image-20250120144641469.png)
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120144641469.png)
 
 ### Feature importance
 
-![image-20250120144749408](./assets/image-20250120144749408.png)
+<img src="https://raw.githubusercontent.com/JTW6912/image/main/20250122102651605.png" style="zoom:100%;" />
 
 ### ROC curve
 
-<img src="./assets/image-20250120144803159.png" alt="image-20250120144803159" style="zoom: 33%;" />
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120144803159.png)
 
 ## 🔄 Data Pipeline
 
@@ -131,9 +131,9 @@ Our mobile interface is carefully crafted using v0 AI design principles, ensurin
 
 - using railway cloud server MYSQL
 
-![image-20250120145745139](./assets/image-20250120145745139.png)
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120145745139.png)
 
-![image-20250120145807931](./assets/image-20250120145807931.png)
+![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120145807931.png)
 
 Our system continuously updates with:
 - Real-time game data
