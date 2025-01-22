@@ -250,6 +250,9 @@ def dashboard():
                 WHERE id = 1
             """)
             
+            # 更新统计数据中的访问量
+            stats['total_page_views'] += 1
+            
             # 获取最近5场比赛的预测
             cursor.execute("""
                 SELECT 
@@ -293,9 +296,6 @@ def dashboard():
                     'away_win_probability_rf': 1 - rf_home_prob
                 }
                 formatted_games.append(formatted_game)
-            
-            # 更新统计数据中的访问量
-            stats['total_page_views'] += 1
             
             conn.commit()
             
