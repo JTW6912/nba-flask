@@ -123,7 +123,7 @@ Our mobile interface is carefully crafted using v0 AI design principles, ensurin
 
 ### ROC curve
 
-![](https://raw.githubusercontent.com/JTW6912/image/main/image-20250120144803159.png)
+<img src="https://raw.githubusercontent.com/JTW6912/image/main/20250122103015853.png"  />![](https://raw.githubusercontent.com/JTW6912/image/main/20250122103044389.png)
 
 ## 🔄 Data Pipeline
 
