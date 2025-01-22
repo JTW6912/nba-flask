@@ -32,7 +32,7 @@
                     All Games
                 </a>
                 <a href="{{ url_for('predict', date_filter='7d', sort=sort_order) }}" 
-                   class="flex-1 sm:flex-none text-center px-3 py-1 text-sm rounded-lg {% if date_filter == '7d' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                   class="flex-1 sm:flex-none text-center px-3 py-1 text-sm rounded-lg {% if date_filter == '7d' or not date_filter %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                     Next 7 Days
                 </a>
                 <a href="{{ url_for('predict', date_filter='30d', sort=sort_order) }}" 

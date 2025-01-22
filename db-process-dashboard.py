@@ -20,40 +20,62 @@ def get_db_connection():
         port=int(os.getenv('MYSQLPORT', 3306))
     )
 
-def create_dashboard_stats_table(cursor):
+def drop_old_tables(cursor):
+    # 删除旧表
+    tables_to_drop = ['dashboard_stats', 'upcoming_games']
+    for table in tables_to_drop:
+        try:
+            cursor.execute(f"DROP TABLE IF EXISTS {table}")
+            logging.info(f"Dropped table: {table}")
+        except Exception as e:
+            logging.error(f"Error dropping table {table}: {e}")
+
+def create_page_stats_table(cursor):
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS dashboard_stats (
+        CREATE TABLE IF NOT EXISTS page_stats (
             id INT AUTO_INCREMENT PRIMARY KEY,
+            total_page_views INT DEFAULT 0,
             total_predictions INT NOT NULL,
             correct_predictions INT NOT NULL,
             accuracy_rate DECIMAL(5,2) NOT NULL,
             last_update DATETIME NOT NULL,
-            page_views INT DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         )
     """)
+    logging.info("Created page_stats table")
 
-def create_upcoming_games_table(cursor):
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS upcoming_games (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            game_id VARCHAR(20) NOT NULL,
-            game_date DATE NOT NULL,
-            home_team_id INT NOT NULL,
-            away_team_id INT NOT NULL,
-            home_team_name VARCHAR(100) NOT NULL,
-            away_team_name VARCHAR(100) NOT NULL,
-            home_win_probability_logistic DECIMAL(6,4) NOT NULL,
-            away_win_probability_logistic DECIMAL(6,4) NOT NULL,
-            home_win_probability_rf DECIMAL(6,4) NOT NULL,
-            away_win_probability_rf DECIMAL(6,4) NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
+def initialize_page_stats(cursor):
+    # 检查是否已有记录
+    cursor.execute("SELECT COUNT(*) FROM page_stats")
+    count = cursor.fetchone()[0]
+    
+    if count == 0:
+        # 获取预测统计数据
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total_predictions,
+                SUM(prediction_correct) as correct_predictions
+            FROM game_predictions_results 
+            WHERE game_status = 3
+        """)
+        stats = cursor.fetchone()
+        
+        total_predictions = stats[0]
+        correct_predictions = stats[1] or 0
+        accuracy_rate = (correct_predictions / total_predictions * 100) if total_predictions > 0 else 0
+        
+        # 插入初始记录
+        cursor.execute("""
+            INSERT INTO page_stats 
+                (total_page_views, total_predictions, correct_predictions, accuracy_rate, last_update)
+            VALUES 
+                (0, %s, %s, %s, NOW())
+        """, (total_predictions, correct_predictions, accuracy_rate))
+        logging.info("Initialized page_stats with default values")
 
-def update_dashboard_stats(cursor):
-    # 获取预测统计数据
+def update_prediction_stats(cursor):
+    # 更新预测统计数据
     cursor.execute("""
         SELECT 
             COUNT(*) as total_predictions,
@@ -67,84 +89,40 @@ def update_dashboard_stats(cursor):
     correct_predictions = stats[1] or 0
     accuracy_rate = (correct_predictions / total_predictions * 100) if total_predictions > 0 else 0
     
-    # 更新或插入统计数据
+    # 更新统计数据
     cursor.execute("""
-        INSERT INTO dashboard_stats 
-            (total_predictions, correct_predictions, accuracy_rate, last_update, page_views)
-        VALUES 
-            (%s, %s, %s, NOW(), 0)
-        ON DUPLICATE KEY UPDATE
-            total_predictions = VALUES(total_predictions),
-            correct_predictions = VALUES(correct_predictions),
-            accuracy_rate = VALUES(accuracy_rate),
+        UPDATE page_stats 
+        SET total_predictions = %s,
+            correct_predictions = %s,
+            accuracy_rate = %s,
             last_update = NOW()
+        WHERE id = 1
     """, (total_predictions, correct_predictions, accuracy_rate))
-
-def update_upcoming_games(cursor):
-    # 清除旧的upcoming games数据
-    cursor.execute("TRUNCATE TABLE upcoming_games")
-    
-    # 获取未来5场比赛的预测（基于当前系统时间）
-    cursor.execute("""
-        SELECT 
-            gpr.game_id,
-            gpr.game_date,
-            gpr.home_team_id,
-            gpr.away_team_id,
-            ht.team_name as home_team_name,
-            at.team_name as away_team_name,
-            gpr.home_win_probability_logistic,
-            gpr.away_win_probability_logistic,
-            gpr.home_win_probability_rf,
-            gpr.away_win_probability_rf
-        FROM game_predictions_results gpr
-        JOIN teams ht ON gpr.home_team_id = ht.team_id
-        JOIN teams at ON gpr.away_team_id = at.team_id
-        WHERE gpr.game_date >= CURDATE()
-            AND gpr.game_status = 1  -- 1表示比赛未开始
-        ORDER BY gpr.game_date ASC, gpr.game_id ASC
-        LIMIT 5
-    """)
-    
-    upcoming_games = cursor.fetchall()
-    
-    # 插入新的upcoming games数据
-    for game in upcoming_games:
-        cursor.execute("""
-            INSERT INTO upcoming_games (
-                game_id, game_date, home_team_id, away_team_id,
-                home_team_name, away_team_name,
-                home_win_probability_logistic, away_win_probability_logistic,
-                home_win_probability_rf, away_win_probability_rf
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """, game)
-        
-    # 记录更新的比赛数量
-    logging.info(f"Updated {len(upcoming_games)} upcoming games")
-    
-    # 如果没有找到未来比赛，记录警告
-    if not upcoming_games:
-        logging.warning("No upcoming games found in the database")
+    logging.info("Updated prediction statistics")
 
 def main():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # 创建所需的表
-        create_dashboard_stats_table(cursor)
-        create_upcoming_games_table(cursor)
+        # 删除旧表
+        drop_old_tables(cursor)
         
-        # 更新数据
-        update_dashboard_stats(cursor)
-        update_upcoming_games(cursor)
+        # 创建新表
+        create_page_stats_table(cursor)
+        
+        # 初始化数据
+        initialize_page_stats(cursor)
+        
+        # 更新预测统计
+        update_prediction_stats(cursor)
         
         # 提交更改
         conn.commit()
-        logging.info("Dashboard data updated successfully")
+        logging.info("Page statistics updated successfully")
         
     except Exception as e:
-        logging.error(f"Error updating dashboard data: {e}")
+        logging.error(f"Error updating page statistics: {e}")
         if conn:
             conn.rollback()
     finally:

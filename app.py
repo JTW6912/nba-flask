@@ -209,58 +209,103 @@ class RegistrationForm(FlaskForm):
 @login_required
 def dashboard():
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        
-        # 获取仪表盘统计数据
-        cursor.execute("SELECT * FROM dashboard_stats ORDER BY id DESC LIMIT 1")
-        stats = cursor.fetchone()
-        
-        if not stats:
-            # 如果没有统计数据，创建初始数据
+        with get_db_connection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            
+            # 获取页面统计数据
             cursor.execute("""
-                INSERT INTO dashboard_stats 
-                (total_predictions, correct_predictions, accuracy_rate, last_update, page_views)
-                VALUES (0, 0, 0.0, NOW(), 0)
+                SELECT 
+                    total_page_views,
+                    total_predictions,
+                    correct_predictions,
+                    accuracy_rate,
+                    last_update
+                FROM page_stats
+                WHERE id = 1
             """)
-            conn.commit()
-            cursor.execute("SELECT * FROM dashboard_stats ORDER BY id DESC LIMIT 1")
             stats = cursor.fetchone()
-        
-        # 获取即将到来的比赛
-        cursor.execute("""
-            SELECT * FROM upcoming_games 
-            ORDER BY game_date ASC 
-            LIMIT 5
-        """)
-        upcoming_games = cursor.fetchall()
-        
-        # 更新页面浏览量
-        cursor.execute("""
-            UPDATE dashboard_stats 
-            SET page_views = page_views + 1,
-                last_update = NOW()
-            WHERE id = %s
-        """, (stats['id'],))
-        stats['page_views'] += 1
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return render_template('dashboard.html', 
-                             stats=stats, 
-                             upcoming_games=upcoming_games)
-                             
+            
+            if not stats:
+                stats = {
+                    'total_page_views': 0,
+                    'total_predictions': 0,
+                    'correct_predictions': 0,
+                    'accuracy_rate': 0,
+                    'last_update': datetime.now()
+                }
+                
+                # 创建初始记录
+                cursor.execute("""
+                    INSERT INTO page_stats 
+                        (total_page_views, total_predictions, correct_predictions, accuracy_rate, last_update)
+                    VALUES 
+                        (0, 0, 0, 0, NOW())
+                """)
+            
+            # 更新总访问量
+            cursor.execute("""
+                UPDATE page_stats 
+                SET total_page_views = total_page_views + 1,
+                    last_update = NOW()
+                WHERE id = 1
+            """)
+            
+            # 获取最近5场比赛的预测
+            cursor.execute("""
+                SELECT 
+                    gpr.game_date,
+                    gpr.season,
+                    gpr.season_type,
+                    gpr.game_status,
+                    gpr.game_status_text,
+                    gpr.home_team_score,
+                    gpr.away_team_score,
+                    gpr.home_win_probability_logistic,
+                    gpr.home_win_probability_rf,
+                    gpr.prediction_correct,
+                    gpr.arena_name,
+                    gpr.arena_city,
+                    ht.team_name as home_team,
+                    at.team_name as away_team
+                FROM game_predictions_results gpr
+                JOIN teams ht ON gpr.home_team_id = ht.team_id
+                JOIN teams at ON gpr.away_team_id = at.team_id
+                WHERE gpr.game_date >= CURDATE()
+                ORDER BY gpr.game_date ASC, gpr.id ASC
+                LIMIT 5
+            """)
+            upcoming_games = cursor.fetchall()
+            
+            # 格式化比赛数据
+            formatted_games = []
+            for game in upcoming_games:
+                # 计算主队和客队的胜率
+                lr_home_prob = float(game['home_win_probability_logistic'])
+                rf_home_prob = float(game['home_win_probability_rf'])
+                
+                formatted_game = {
+                    'game_date': game['game_date'],
+                    'home_team_name': game['home_team'],
+                    'away_team_name': game['away_team'],
+                    'home_win_probability_logistic': lr_home_prob,
+                    'away_win_probability_logistic': 1 - lr_home_prob,
+                    'home_win_probability_rf': rf_home_prob,
+                    'away_win_probability_rf': 1 - rf_home_prob
+                }
+                formatted_games.append(formatted_game)
+            
+            # 更新统计数据中的访问量
+            stats['total_page_views'] += 1
+            
+            conn.commit()
+            
+            return render_template('dashboard.html', 
+                                 stats=stats,
+                                 upcoming_games=formatted_games)
+                                 
     except Exception as e:
         app.logger.error(f"Error in dashboard route: {str(e)}")
-        app.logger.error(traceback.format_exc())  # 添加详细的错误跟踪
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
-        flash("An error occurred while loading the dashboard", "error")
-        return redirect(url_for('index'))
+        return render_template('error.html', error="An error occurred while loading the dashboard")
 
 @app.route('/logout')
 @login_required
@@ -279,11 +324,11 @@ def predict():
     try:
         # Get pagination and sorting parameters
         page = request.args.get('page', 1, type=int)
-        sort_order = request.args.get('sort', 'asc')
-        date_filter = request.args.get('date_filter', 'all')
-        start_date = request.args.get('start_date')
+        sort_order = request.args.get('sort', 'asc')  # 'asc' or 'desc'
+        date_filter = request.args.get('date_filter', '7d')  # Changed default to '7d'
+        start_date = request.args.get('start_date')  # YYYY-MM-DD format for custom date
         
-        per_page = 10
+        per_page = 10  # Number of predictions per page
         offset = (page - 1) * per_page
 
         # Build date filter condition
@@ -308,6 +353,9 @@ def predict():
             except ValueError:
                 app.logger.error(f"Invalid date format: {start_date}")
                 return render_template('error.html', error="Invalid date format. Please use YYYY-MM-DD")
+        elif date_filter == 'all':
+            date_condition = ""
+            query_params = []
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
